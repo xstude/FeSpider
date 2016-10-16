@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>test 1</title>
+    <script type="text/javascript" src="../src/lib/cssutilities/Selector.js"></script>
+    <script type="text/javascript" src="../src/lib/cssutilities/CSSUtilities.js"></script>
     <script type="text/javascript" src="../src/fespider.js"></script>
 </head>
 <style>
@@ -13,16 +15,143 @@
         color: red;
     }
     .t-d {
-        border: 1px #000 solid;
+        border: 2px #000 solid;
+        color: blue !important;
     }
     div * {
         color: green;
     }
+    #d1 {
+        color: purple;
+    }
+    #output {
+        font-size: 12px;
+        letter-spacing: 0;
+        border: 2px purple solid;
+    }
 </style>
-<body>
-    <div id="d1" class="t-d" style="height: 128px;padding-left: 24px;">
+<body style="letter-spacing: 1em;">
+    <div id="d1" class="t-d" style="height: 128px;padding-left: 24px">
         123
         <span>456</span>
     </div>
+    <div id="output" style=""></div>
+    <script type="text/javascript">
+        //sort and output a rules set
+        var sortThenOutput = function (target, rules) {
+            //pass the rules array through a multi-part sort
+            //to put it in primary order of inverse inheritance depth, then
+            //secondary order of specificity, then tertiary order of source index
+            //(the default sort is specificity > index > inheritance)
+            rules.sort(function(a, b) {
+                if (a.inheritance.length == b.inheritance.length) {
+                    if (a.specificity.toString() === b.specificity.toString()) {
+                        return a.index - b.index;
+                    }
+
+                    if (a.specificity[0] !== b.specificity[0]) {
+                        return a.specificity[0] - b.specificity[0];
+                    }
+                    if (a.specificity[1] !== b.specificity[1]) {
+                        return a.specificity[1] - b.specificity[1];
+                    }
+                    if (a.specificity[2] !== b.specificity[2]) {
+                        return a.specificity[2] - b.specificity[2];
+                    }
+                    return a.specificity[3] - b.specificity[3];
+                }
+
+                return b.inheritance.length - a.inheritance.length;
+            });
+
+            //now reverse the whole thing
+            //so that the highest values are at the top
+            rules.reverse();
+
+
+            //assemble the HTML output
+            for (var html = '<dl>',
+                    currentnode = null,
+                    previousnode = null,
+                    i = 0; i < rules.length; i++) {
+                //track the current inheritance context node
+                //so we can output a key term when it changes
+                var currentnode = rules[i].inheritance.length > 0 ? rules[i].inheritance[0] : null;
+
+                //ignore rules with no properties
+                //(these will be inherited rules that contain no inheritable properties)
+                if (rules[i].properties == null) {
+                    continue;
+                }
+
+                //add an inheritance key term if applicable
+                if (rules[i].inheritance.length > 0 && currentnode != previousnode) {
+                    previousnode = currentnode;
+                    key = currentnode.nodeName.toLowerCase() + (currentnode.id != '' ? ('#' + currentnode.id) : currentnode.className != '' ? ('.' + currentnode.className) : '');
+
+                    html += '<dt>Inherited from <code>' + key + '</code></dt>';
+                }
+
+                //open this rule's code block
+                html += '<dd><pre>';
+
+                //add the rule's tooltip information
+                var ilen = rules[i].inheritance.length;
+                if (ilen > 0) {
+                    for (var chain = '', k = 0; k < ilen; k++) {
+                        chain += rules[i].inheritance[k].nodeName.toLowerCase() + ' > ';
+                    }
+                    chain += target.nodeName.toLowerCase();
+                }
+                html += '<abbr title="' + (rules[i].href == null ? '' : ('STYLESHEET = &quot;' + rules[i].href + '&quot;' + '\; \u000a')) + 'MEDIA = &quot;' + rules[i].media + '&quot;' + '\; \u000a' + (ilen > 0 ? ('INHERITANCE = ' + chain) : ('SPECIFICITY = &quot;' + rules[i].specificity + '&quot;')) + '">'
+
+                //add the selector and open block
+                html += '<span class="cssselector">' + rules[i].selector + '</span>\n{\n';
+
+                //iterate to add the properties
+                for (var j in rules[i].properties) {
+                    if (!rules[i].properties.hasOwnProperty(j)) {
+                        continue;
+                    }
+
+                    //add the data for cancelled or active properties
+                    var prop = rules[i].properties[j];
+                    html += '    ';
+                    if (prop.status == 'cancelled') {
+                        html += '<del>' + j + ': ' + prop.value + ';</del>';
+                    } else {
+                        html += '<span class="cssproperty">' + j + '</span>: ' + '<span class="cssvalue">' + prop.value + '</span>;';
+                    }
+                    html += '\n';
+                }
+
+                //close this rule block
+                html += '}</abbr></pre></pre>';
+            }
+
+            //add the "no rules" message if applicable
+            if (html == '<dl>') {
+                html += '<dt>The selected element has no rules</dt>';
+            }
+
+            //close the html
+            html += '</dl>';
+
+
+            //output the finished HTML
+            var output = document.getElementById('output');
+            output.innerHTML = html;
+
+            //try to reset scrolling back to the top
+            try {
+                output.scrollTop = 0;
+            } catch (err) {}
+        }
+
+        window.onload = function () {
+            var target = document.getElementById('d1');
+            sortThenOutput(target, styleOfElement(target));
+        };
+    </script>
 </body>
 </html>

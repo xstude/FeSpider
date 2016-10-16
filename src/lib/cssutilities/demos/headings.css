@@ -1,0 +1,61 @@
+
+
+
+
+ 
+h1#HeadinG
+{
+	font:normal normal normal 1.4em sans-serif;
+	color:#009900;
+	margin-left:20px;
+	border:1px solid red;
+}
+
+h1#HeadinG:active
+{
+	border:1px dotted;
+}
+
+h1#HeadinG:after
+{
+	content:"";
+}
+
+@media screen
+{
+
+	body.FOOBAR#localhost h1:not([id="xxx"])
+	{
+		font:italic normal normal 1.6em serif;
+		color:#000099 !important;
+		border-top-color:blue;
+		margin:20px 0 10px 5px;
+		
+	}
+	
+	html h1
+	{
+		font:normal normal bold 1.2em cursive;
+		color:#990000;
+		padding:5px;
+	}
+	
+	html body h1:not(#whatever)
+	{
+		font-size:2em;
+	}
+
+}
+
+body > div + div
+{
+	color:#009900;
+}
+
+h2
+{
+	padding:6px 6px 1px 6px;
+	margin:5px 0 0 0;
+	color:inherit;
+	font:1.1em sans-serif;
+}

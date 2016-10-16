@@ -1,0 +1,137 @@
+
+*
+{
+	margin:0;
+	padding:0;
+	list-style-type:none;
+}
+
+html, body
+{
+	font:normal normal normal 1em/1.4 arial,sans-serif;
+	background:#fff;
+	color:#444;
+}
+body
+{
+	padding:10px;
+	font-size:100%;
+}
+
+h1
+{
+	font-size:1.88em;
+	letter-spacing:-1px;
+	font-weight:normal;
+}
+
+p, h2, label
+{
+	font-size:0.88em;
+}
+p
+{
+	width:700px;
+}
+
+p.function-credit
+{
+	clear:both;
+	padding-top:40px;
+	font-size:0.78em;
+	color:#777;
+	text-align:right;
+}
+p.function-credit code
+{
+	font-family:monaco,courier,monospace;
+	letter-spacing:-1px;
+}
+p.function-credit a, p.function-credit a:visited
+{
+	color:#777;
+	text-decoration:none;
+}
+p.function-credit a:hover, p.function-credit a:focus
+{
+	text-decoration:underline;
+}
+
+abbr
+{
+	font-style:normal;
+	border:none;
+	cursor:default;
+}
+
+
+
+#intro
+{
+	float:left;
+	width:368px;
+	padding:10px;
+	border:1px solid #bbb;
+	background:#eee;
+	height:20em;
+}
+
+#intro h1
+{
+	background:#ddd;
+	border:1px solid;
+	border-bottom:2px solid;
+	margin-bottom:10px;
+	font-size:1.5em;
+	padding:5px 10px;
+	line-height:1.1;
+}
+
+#intro p
+{
+	margin-bottom:10px;
+	width:auto;
+}
+
+#intro form
+{
+}
+#intro form fieldset
+{
+	border:none;
+	padding:5px 15px;
+}
+#intro form label
+{
+	float:left;
+	margin-right:10px;
+	font-weight:bold;
+}
+	
+
+
+#properties
+{
+	border:1px inset #000000;
+	background:#336633;
+	color:#fff;
+	padding:10px;
+	float:left;
+	margin-left:10px;
+	width:278px;
+	height:20em;
+	overflow:auto;
+}
+
+#properties pre
+{
+	font:normal normal normal 0.73em/1.5 monaco,"courier new",monospace;
+	display:block;
+}
+#properties pre code
+{
+	font:inherit;
+}
+
+
+

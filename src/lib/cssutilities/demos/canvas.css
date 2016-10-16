@@ -1,0 +1,46 @@
+
+@import url("print.css") print,tv;
+
+
+
+ 
+html > body
+{
+	background:#ffeecc;
+	color:#000000;
+	font-size:100%;
+	font-style:normal;
+	cursor:default;
+	border:2px dotted orange;
+}
+
+
+p
+{
+	font:normal normal normal 0.83em/1.4 arial,sans-serif;
+	margin:0 6px;
+}
+
+p.function-credit
+{
+	clear:both;
+	padding-top:10px;
+	font-size:0.78em;
+	color:#777;
+	text-align:right;
+}
+p.function-credit code
+{
+	font-family:monaco,courier,monospace;
+	letter-spacing:-1px;
+}
+p.function-credit a, p.function-credit a:visited
+{
+	color:#777;
+	text-decoration:none;
+}
+p.function-credit a:hover, p.function-credit a:focus
+{
+	text-decoration:underline;
+}
+

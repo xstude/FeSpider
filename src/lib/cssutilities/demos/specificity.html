@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+
+	<title>Get Specificity</title>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" type="text/css" href="specificity.css" media="screen,projection" />
+	
+	<!-- CSSUtilities + Selector.js -->
+	<script type="text/javascript" src="../CSSUtilities.js"></script>
+	<script type="text/javascript" src="../Selector.js"></script>
+	
+</head>
+
+<body>
+
+	<h1>Get Specificity</h1>
+	
+	<p>
+		Enter a <abbr title="Cascading Style Sheets">CSS</abbr> Selector into the 
+		textbox below, and press the <kbd>Get Specificity!</kbd> button:
+	</p>
+
+	<form id="get-specificity" action="">
+		<fieldset>
+			<label for="selector">
+				<span>CSS Selector:</span>
+				<input type="text" class="text default" id="selector" name="selector" value="html &gt; body#localhost ul.menu" />
+			</label>
+			<input type="submit" class="button" value="Get Specificity!" />
+		</fieldset>
+	</form>
+	
+	<div id="results"></div>
+	
+	
+	<p class="function-credit">
+		&#x2192; Powered by  
+		<a href="http://www.brothercake.com/site/resources/scripts/cssutilities/">
+			<code>CSSUtilities</code></a>
+	</p>
+		
+
+
+	<!-- demo script -->
+	<script type="text/javascript" src="specificity.js"></script>
+	
+</body>
+</html>

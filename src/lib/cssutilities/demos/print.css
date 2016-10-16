@@ -1,0 +1,25 @@
+
+
+h2
+{
+	width:100%;
+}
+
+
+@media handheld
+{
+	
+	a[href]
+	{
+		text-decoration:underline;
+	}
+	
+	a[href]:after
+	{
+		content:"<" attr(href) ">";
+		font-style:italic;
+	}
+	
+}
+
+

@@ -1,0 +1,19 @@
+
+#intro
+{
+	border-color:#ddaaaa;
+	background-color:#ffeeee;
+}
+
+#intro h1
+{
+	background-color:#ffcccc;
+	border-color:#eebbbb;
+	border-bottom-color:#bb8888;
+	color:#885555;
+}
+
+#intro p, #intro form label
+{
+	color:#885555;
+}

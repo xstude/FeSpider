@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+
+	<title>Live CSS Inspector</title>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" type="text/css" href="canvas.css" media="screen,projection" />
+	<link rel="stylesheet" type="text/css" href="inspector.css" media="screen,projection" />
+	
+	<!-- CSSUtilities + Selector.js -->
+	<script type="text/javascript" src="../CSSUtilities.js"></script>
+	<script type="text/javascript" src="../Selector.js"></script>
+	
+</head>
+
+<body>
+
+	<div id="intro-column">
+	
+		<h1>Live CSS Inspector</h1>
+		
+		<p>
+			The output area to the right will show real-time inspection 
+			of the <abbr title="Cascading Style Sheets">CSS</abbr> used on this page:
+		</p>
+		
+		<ol class="compact">
+			<li>Press "Inspect" to enable the demo</li>
+			<li><strong>Click any element to inspect its CSS</strong></li>
+			<li>Press the button again to disable the demo</li>
+		</ol>
+		
+		<p>
+			Any rules which apply to the element you select will be shown 
+			in the output area. You can also hover over each rule to see 
+			additional information in its tooltip.
+		</p>
+
+	</div>
+
+	<div class="cssutilities-demo">
+		<button type="button" id="cssutilities-demotrigger" class="">Inspect</button>
+		<div id="content-demo"></div>
+	</div>
+	
+	
+	<p class="function-credit">
+		&#x2192; Powered by  
+		<a href="http://www.brothercake.com/site/resources/scripts/cssutilities/">
+			<code>CSSUtilities</code></a>
+	</p>
+		
+
+
+	<!-- demo script -->
+	<script type="text/javascript" src="inspector.js"></script>
+	
+</body>
+</html>

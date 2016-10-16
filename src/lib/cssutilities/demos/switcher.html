@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+
+	<title>Stylesheet Switching</title>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<link rel="stylesheet" type="text/css" href="switcher.css" media="screen,projection" />
+	<link rel="stylesheet" title="Shades of Red" type="text/css" href="switcher-red.css" media="screen,projection" />
+	<link rel="alternate stylesheet" title="Shades of Green" type="text/css" href="switcher-green.css" media="screen,projection" />
+	<link rel="alternate stylesheet" title="Shades of Blue" type="text/css" href="switcher-blue.css" media="screen,projection" />
+	<link rel="alternate stylesheet" title="Shades of Purple" type="text/css" href="switcher-purple.css" media="screen,projection" />
+	
+	
+	<!-- CSSUtilities + Selector.js -->
+	<script type="text/javascript" src="../CSSUtilities.js"></script>
+	<script type="text/javascript" src="../Selector.js"></script>
+	
+</head>
+
+<body>
+
+	<div id="intro">
+	
+		<h1>Stylesheet Switching</h1>
+		
+		<p>
+			This demo shows how the library can automatically re-initialize 
+			in response to stylesheet switching. The box on the right lists the 
+			<strong>color-related properties</strong> that apply to the 
+			<code>&lt;h1&gt;</code> element above; whenever the stylesheets change, 
+			the list of properties will update automatically to reflect the new styles.
+		</p>
+		<p>
+			Use the selector below to switch between stylesheets, or use your browser's  
+			native switching mechanism if it has one. 
+		</p>
+		
+		<form id="switcher-form" action="">
+			<fieldset>
+				<label for="switcher-menu">Stylesheet:</label>
+				<select id="switcher-menu">
+					<option value="red" selected="selected">Shades of Red</option>
+					<option value="green">Shades of Green</option>
+					<option value="blue">Shades of Blue</option>
+					<option value="purple">Shades of Purple</option>
+				</select>
+			</fieldset>
+		</form>
+		
+	</div>	
+
+
+	<div id="properties"><pre><code id="output"></code></pre></div>
+
+	
+	
+	<p class="function-credit">
+		&#x2192; Powered by  
+		<a href="http://www.brothercake.com/site/resources/scripts/cssutilities/">
+			<code>CSSUtilities</code></a>
+	</p>
+		
+
+
+	<!-- demo script -->
+	<script type="text/javascript" src="switcher.js"></script>
+	
+</body>
+</html>

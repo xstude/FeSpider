@@ -1,0 +1,176 @@
+
+*
+{
+	margin:0;
+	padding:0;
+	list-style-type:none;
+}
+
+html, body
+{
+	font:normal normal normal 1em/1.4 arial,sans-serif;
+	background:#fff;
+	color:#444;
+}
+body
+{
+	padding:10px;
+	font-size:100%;
+}
+
+h1
+{
+	font-size:1.88em;
+	letter-spacing:-1px;
+	font-weight:normal;
+}
+
+p, label, ul, dl
+{
+	font-size:0.88em;
+}
+p
+{
+	width:700px;
+}
+
+p.function-credit
+{
+	clear:both;
+	padding-top:50px;
+	font-size:0.78em;
+	color:#777;
+	text-align:right;
+}
+p.function-credit code
+{
+	font-family:monaco,courier,monospace;
+	letter-spacing:-1px;
+}
+p.function-credit a, p.function-credit a:visited
+{
+	color:#777;
+	text-decoration:none;
+}
+p.function-credit a:hover, p.function-credit a:focus
+{
+	text-decoration:underline;
+}
+
+abbr
+{
+	font-style:normal;
+	border:none;
+	cursor:default;
+}
+
+dl
+{
+	border-left:2px solid #bbb;
+	padding-left:15px;
+}
+
+dd span
+{
+	width:32px;
+	height:25px;
+	padding-top:7px;
+	text-align:center;
+	border:1px solid rgba(0,0,0,0.7);
+	display:inline-block;
+	margin:3px 0 0 -1px;
+	position:relative;
+	left:1px;
+}
+dd span.group1 { background:#e00; color:#fff; }
+dd span.group2 { background:#0b0; color:#fff; }
+dd span.group3 { background:#00f; color:#fff; }
+
+dd
+{
+	margin-bottom:10px;
+}
+
+form
+{
+	margin:25px 0;
+	width:700px;
+}
+form fieldset
+{
+	padding:10px;
+	border:2px solid #bbb;
+	background:#ddd;
+	color:#000;
+	-moz-border-radius:10px;
+	-webkit-border-radius:10px;
+	border-radius:10px;
+}
+
+label
+{
+	font-weight:bold;
+	color:#666;
+}
+label span
+{
+	display:inline-block;
+	padding:0 10px 0 5px;
+}
+
+input.text
+{
+	border:2px solid #bbb;
+	padding:3px 6px;
+	margin-right:10px;
+	font:normal bold normal 1em/1.2 "courier new",monospace;
+	color:#828;
+	width:350px;
+}
+input.text.default
+{
+	color:#bbb;
+}
+
+input.button, kbd
+{
+	display:inline-block;
+	font:normal bold normal 0.88em/1.4 arial,sans-serif;
+	display: inline-block; 
+	padding:4px 12px;
+	overflow:visible;
+	color:#444;
+	text-decoration: none;
+	-moz-border-radius: 5px; 
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	-moz-box-shadow:0 0 3px rgba(50,50,50,0.3);
+	-webkit-box-shadow:0 0 3px rgba(50,50,50,0.3);
+	box-shadow:0 0 3px rgba(50,50,50,0.3);
+	border:1px solid;
+	border-color:rgba(180,180,180,0.45) 
+				 rgba(100,100,100,0.35) 
+				 rgba(50,50,50,0.3) 
+				 rgba(180,180,180,0.45);
+	position:relative;
+	top:2px;
+	cursor:pointer;
+	margin:0 0 3px 0;
+	background:#eee;
+	text-align:center;
+}
+input.button:active
+{
+	top:3px;
+}
+
+kbd
+{
+	top:0;
+	margin:0;
+	padding:2px 6px;
+	font-size:0.78em;
+	cursor:default;
+}
+
+
