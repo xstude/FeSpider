@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <title>test 1</title>
     <script type="text/javascript" src="../src/lib/cssutilities/Selector.js"></script>
-    <script type="text/javascript" src="../src/lib/cssutilities/CSSUtilities.js"></script>
+    <script type="text/javascript" src="../src/lib/cssutilities/CSSUtilities[commented].js"></script>
     <script type="text/javascript" src="../src/fespider.js"></script>
 </head>
 <style>
     body {
         font-size: 32px;
+    }
+    #body {
+        font-weight: bold;
     }
     div {
         color: red;
@@ -17,6 +20,7 @@
     .t-d {
         border: 2px #000 solid;
         color: blue !important;
+        font-weight: normal;
     }
     div * {
         color: green;
@@ -24,18 +28,46 @@
     #d1 {
         color: purple;
     }
-    #output {
+    .wrap {
+        line-height: 24px;
+    }
+    #output, #output2 {
         font-size: 12px;
         letter-spacing: 0;
         border: 2px purple solid;
+        /*width: 50%;*/
+        height: 400px;
+        overflow: auto;
+    }
+    #output {
+        float: left;
+    }
+    #output2 {
+        float: left;
+    }
+    #output *, #output2 * {
+        color: #000;
+    }
+    #output .cssproperty, #output2 .cssproperty {
+        color: red;
+    }
+    #output dt, #output2 dt {
+        color: #999;
+        background-color: #eee;
+    }
+    #output dt code, #output2 dt code {
+        color: #000;
     }
 </style>
-<body style="letter-spacing: 1em;">
-    <div id="d1" class="t-d" style="height: 128px;padding-left: 24px">
-        123
-        <span>456</span>
+<body id="body" style="letter-spacing: 1em;">
+    <div class="wrap">
+        <div id="d1" class="t-d" style="height: 128px;padding-left: 24px">
+            123
+            <span>456</span>
+        </div>
     </div>
     <div id="output" style=""></div>
+    <div id="output2"></div>
     <script type="text/javascript">
         //sort and output a rules set
         var sortThenOutput = function (target, rules) {
@@ -146,11 +178,23 @@
             try {
                 output.scrollTop = 0;
             } catch (err) {}
-        }
+        };
+
+        var output2 = function (sty) {
+            var output = document.getElementById('output2');
+            var kvs = '{\n';
+            for(var i in sty) {
+                kvs += '    <span class="cssproperty">' + i + '</span>' + ': ' + '<span class="cssvalue">' + sty[i] + '</span>' + ';\n';
+            }
+            kvs += '}';
+            output.innerHTML = '<dl><dd><pre><abbr>' + kvs + '</abbr></pre></dd></dl>';
+        };
 
         window.onload = function () {
             var target = document.getElementById('d1');
-            sortThenOutput(target, styleOfElement(target));
+            sortThenOutput(target, styleRulesOfElement(target));
+
+            output2(feSpider(target));
         };
     </script>
 </body>
