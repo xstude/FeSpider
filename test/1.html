@@ -60,7 +60,7 @@
     }
 </style>
 <body id="body" style="letter-spacing: 1em;">
-    <div class="wrap">
+    <div class="wrap" style="line-height: 32px;">
         <div id="d1" class="t-d" style="height: 128px;padding-left: 24px">
             123
             <span>456</span>
@@ -194,7 +194,7 @@
             var target = document.getElementById('d1');
             sortThenOutput(target, styleRulesOfElement(target));
 
-            output2(feSpider(target));
+            output2(styleOfElement(target));
         };
     </script>
 </body>

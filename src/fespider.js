@@ -8,6 +8,12 @@ var util = {
             obj1[i] = obj2[i];
         }
         return obj1;
+    },
+    recurse: function (el, fn) {
+        fn(el);
+        for(var i = 0, len = el.children.length; i < len; i++) {
+            this.recurse(el.children[i], fn);
+        }
     }
 };
 
@@ -21,14 +27,68 @@ var feSpider = function(_el, url) {
         return;
     }
 
-    var ourterHTML = el.ourterHTML;
-
     var rules = styleRulesOfElement(el);
     var style = styleOfElement(el);
 
-    console.log(rules);
+    // console.log(rules);
+    // console.log(style);
+
+    el.setAttribute('_style', JSON.stringify(style));
+    for(var i = 0, len = el.children.length; i < len; i++) {
+        util.recurse(el.children[i], function (e) {
+            e.setAttribute('_style', JSON.stringify(uninheritedStyleOfElement(e)));
+        });
+    }
+
+    var newEl = iframer(el.outerHTML);
+
+    var outerHTML = newEl.outerHTML;
+
+    console.log(outerHTML);
+
+    document.head.innerHTML = '';
+    document.body.innerHTML = outerHTML;
 
     return style;
+};
+
+var iframer = function (html) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('frameBorder', '0');
+    iframe.setAttribute('scrolling', 'no');
+    iframe.setAttribute('width', '100%');
+    iframe.setAttribute('allowTransparency', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.zoom = '1';
+    iframe.style.zIndex = '2147483647';
+    iframe.style.minHeight = '0';
+    iframe.style.background = 'none';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.body.innerHTML = html;
+
+    var el = iframe.contentDocument.body.children[0];
+
+    util.recurse(el, function (e) {
+        assignStyle(e, JSON.parse(e.getAttribute('_style')));
+    });
+
+    return el;
+};
+
+var assignStyle = function (el, obj) {
+    el.style.cssText = '';
+    for(var i in obj) {
+        if(!obj.hasOwnProperty(i)) continue;
+        el.style.setProperty(i, obj[i].replace(' !important', ''));
+    }
+    el.removeAttribute('id');
+    el.removeAttribute('class');
+    el.removeAttribute('_style');
 };
 
 var styleRulesOfElement = function (el) {
@@ -41,13 +101,13 @@ var styleRulesOfElement = function (el) {
     return re;
 };
 
-var styleOfElement = function (el) {
-    var re = inheritedStyleOfElement(el);
+var styleOfElement = function (el, noinherance) {
+    var re = noinherance ? {} : inheritedStyleOfElement(el);
 
     var srs = styleRulesOfElement(el);
     for(var i = 0, len = srs.length; i < len; i++) {
         var sr = srs[i];
-        if(sr.inheritance > 0) continue;
+        if(sr.inheritance.length > 0) continue;
         var srp = sr.properties;
         for(var j in srp) {
             if(!srp.hasOwnProperty(j) || srp[j].status !== 'active') continue;
@@ -56,6 +116,10 @@ var styleOfElement = function (el) {
     }
 
     return re;
+};
+
+var uninheritedStyleOfElement = function(el) {
+    return styleOfElement(el, true);
 };
 
 var inheritedStyleOfElement = function(el) {

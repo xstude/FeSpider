@@ -1,0 +1,27 @@
+{
+  "name": "FeSpider",
+  "description": "A dom spider for FEers.",
+  "version": "0.1.0",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "activeTab", "http://*/*", "https://*/*"
+  ],
+  "browser_action": {
+      "default_title": "FeSpider",
+      "default_icon": "fespider_16x16.png"
+  },
+  "manifest_version": 2,
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": [
+        // "Selector.js", 
+        // "CSSUtilities.js", 
+        // "fespider.js"
+        "exec.js"
+      ]
+    }
+  ]
+}
