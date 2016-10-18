@@ -6,6 +6,7 @@ iframe {
 }
 
 textarea {
-    width: 100%;
+    width: 62.8%;
+    max-width: 62.8%;
     min-height: 256px;
 }

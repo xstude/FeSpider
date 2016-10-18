@@ -101,7 +101,7 @@
         );
         chrome.devtools.inspectedWindow.eval(
             // 'document.body.innerHTML=""',
-            "document.body.style.cssText = ''; document.body.innerHTML = '<div>' + '" + html.replace(/'/g,'"').replace(/\n/g,"\\n") + "' + '</div>'",
+            "document.body.style.cssText = '';while(document.body.attributes.length > 0) document.body.removeAttribute(document.body.attributes[0].name);var old_body = document.body;var new_body = old_body.cloneNode(true);old_body.parentNode.replaceChild(new_body, old_body); document.body.innerHTML = '<div>' + '" + html.replace(/'/g,'"').replace(/\n/g,"\\n") + "' + '</div>'",
             function(result, isException) {}
         );
 	    chrome.devtools.inspectedWindow.eval(
