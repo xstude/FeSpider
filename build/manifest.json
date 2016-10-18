@@ -1,0 +1,14 @@
+{
+  "name": "FeSpider",
+  "description": "Extract CSS and HTML from selected element, referring to [SnappySnippet](https://chrome.google.com/webstore/detail/snappysnippet/blfngdefapoapkcdibbdkigpeaffgcil).",
+  "version": "0.1.0",
+  "manifest_version": 2,
+  "minimum_chrome_version": "18.0",
+  "devtools_page": "devtools.html",
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ],
+    "persistent": false
+  }
+}

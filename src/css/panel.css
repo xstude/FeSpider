@@ -1,0 +1,12 @@
+iframe {
+    display: none !important;
+    width: 0;
+    height: 0;
+    visibility: hidden;
+}
+
+.col {
+    width: 50px;
+    height: 100px;
+    overflow: auto;
+}
