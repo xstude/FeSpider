@@ -164,6 +164,11 @@ var getPseudoElements = function (dom) {
     return re;
 };
 
+var preventDefaultProps = {
+    'a color': true,
+    'a text-decoration': true
+};
+
 var getMetaData = function (dom) {
     var type = dom.nodeName.toLowerCase();
     if (type === 'meta') return null;
@@ -208,7 +213,9 @@ var getMetaData = function (dom) {
             if (childData.nodeName !== '#text') {
                 var dupProps = [];
                 for (var i in childData.style) {
-                    if (meta.style[i] === childData.style[i]) {
+                    if (!preventDefaultProps[childData.nodeName + ' ' + i]
+                        && PropertyTable[i].inherit
+                        && meta.style[i] === childData.style[i]) {
                         dupProps.push(i);
                     }
                 }
