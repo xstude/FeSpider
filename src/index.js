@@ -6,6 +6,20 @@
 * @Last modified time: 2017-03-10 09:43:57
 */
 
+/**
+ * String Hash
+ * Ref: http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+ */
+String.prototype.hashCode = function () {
+    var hash = 0, i, chr;
+    if (this.length === 0) return hash;
+    for (i = 0; i < this.length; i++) {
+        chr   = this.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+};
 
 var PropertyTable = {
     'display': {},
@@ -18,6 +32,9 @@ var PropertyTable = {
     'right': {},
     'bottom': {},
     'left': {},
+    'background': {},
+    'background-color': {},
+    'background-size': {},
     'margin': {},
     // 'margin-top': {},
     // 'margin-right': {},
@@ -62,7 +79,11 @@ var PropertyTable = {
     },
     'box-shadow': {},
     'box-sizing': {},
-    'outline': {},
+    'outline': {
+        ignore: function (v) {
+            return v.indexOf('none') >= 0;
+        }
+    },
     'color': {
         inherit: true
     },
@@ -169,7 +190,35 @@ var preventDefaultProps = {
     'a text-decoration': true
 };
 
+var getMetaData_test = function (dom) {
+    var metaShow = getFullMetaData(dom);
+    dom.style.display = 'none';
+    var metaHide = getFullMetaData(dom);
+    var patch = function (node1, node2) {
+        if (!node1.style) return;
+        for (var p in node1.style) {
+            if (/px/.test(node1.style[p])) {
+                node1.style[p] = node2.style[p];
+            }
+        }
+        if (node1.childNodes) {
+            for (var i = 0, len = node1.childNodes.length; i < len; i++) {
+                patch(node1.childNodes[i], node2.childNodes[i]);
+            }
+        }
+    };
+    patch(metaShow, metaHide);
+    return metaShow;
+};
 var getMetaData = function (dom) {
+    var display = window.getComputedStyle(dom)['display'];
+    dom.style.display = 'none';
+    var re = getFullMetaData(dom);
+    re.style.display = display;
+    return re;
+};
+
+var getFullMetaData = function (dom) {
     var type = dom.nodeName.toLowerCase();
     if (type === 'meta') return null;
     if (type === '#comment') return null;
@@ -208,7 +257,7 @@ var getMetaData = function (dom) {
     if (dom.childNodes.length) {
         meta.childNodes = [];
         dom.childNodes.forEach(function (el, i) {
-            var childData = getMetaData(el);
+            var childData = getFullMetaData(el);
             if (!childData) return true;
             if (childData.nodeName !== '#text') {
                 var dupProps = [];
@@ -230,15 +279,42 @@ var getMetaData = function (dom) {
     return meta;
 };
 
-var addCssRule = function (selector, obj) {
+var nodeTypeCount = {};
+var cssRuleValueHash2Name = {};
+var cssRuleName2ValueHash = {};
+var stringOfStyleObj = function (obj) {
     var props = [];
     for (var p in obj) {
         props.push(p + ':' + obj[p] + ';');
     }
-    styleSheet.innerHTML += selector + '{' + props.join('') + '}';
+    return props.join('');
 };
+var addCssRule = function (nodeName, obj, pseudo) {
+    var self = stringOfStyleObj(obj);
+    var selfHash = self.hashCode();
+    var pBefore = !pseudo ? null : (!pseudo.before ? null : stringOfStyleObj(pseudo.before));
+    var pBeforeHash = pBefore ? pBefore.hashCode() : null;
+    var pAfter = !pseudo ? null : (!pseudo.after ? null : stringOfStyleObj(pseudo.after));
+    var pAfterHash = pAfter ? pAfter.hashCode() : null;
 
-var nodeTypeCount = {};
+    if (cssRuleValueHash2Name[selfHash]) {
+        var existingName = cssRuleValueHash2Name[selfHash];
+        if (cssRuleName2ValueHash[existingName + '::before'] === pBeforeHash
+            && cssRuleName2ValueHash[existingName + '::after'] === pAfterHash) {
+            return existingName;
+        }
+    }
+    if (!nodeTypeCount[nodeName]) nodeTypeCount[nodeName] = 0;
+    nodeTypeCount[nodeName]++;
+    var className = nodeName + nodeTypeCount[nodeName];
+    cssRuleValueHash2Name[selfHash] = className;
+    cssRuleName2ValueHash[className + '::before'] = pBeforeHash;
+    cssRuleName2ValueHash[className + '::after'] = pAfterHash;
+    styleSheet.innerHTML += '.' + className + '{' + self + '}';
+    if (pBefore) styleSheet.innerHTML += '.' + className + '::before' + '{' + pBefore + '}';
+    if (pAfter) styleSheet.innerHTML += '.' + className + '::after' + '{' + pAfter + '}';
+    return className;
+};
 
 var helperIframe;
 
@@ -266,10 +342,6 @@ var buildDom = function (meta) {
     }
     var dom = document.createElement(meta.nodeName);
 
-    if (!nodeTypeCount[meta.nodeName]) nodeTypeCount[meta.nodeName] = 1;
-    dom.className = meta.nodeName.toUpperCase() + nodeTypeCount[meta.nodeName];
-    nodeTypeCount[meta.nodeName]++;
-
     if (meta.attrs) {
         for (var k in meta.attrs) {
             dom.setAttribute(k, meta.attrs[k]);
@@ -282,11 +354,7 @@ var buildDom = function (meta) {
         });
     }
 
-    addCssRule('.' + dom.className, meta.style);
-    if (meta.pseudo) {
-        if (meta.pseudo.before) addCssRule('.' + dom.className + '::before', meta.pseudo.before);
-        if (meta.pseudo.after) addCssRule('.' + dom.className + '::after', meta.pseudo.after);
-    }
+    dom.className = addCssRule(meta.nodeName, meta.style, meta.pseudo);
 
     return dom;
 };
