@@ -6,6 +6,10 @@
 * @Last modified time: 2017-03-10 09:43:57
 */
 
+var conf = {
+    fetchFont: false
+};
+
 /**
  * String Hash
  * Ref: http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
@@ -19,6 +23,25 @@ String.prototype.hashCode = function () {
         hash |= 0; // Convert to 32bit integer
     }
     return hash;
+};
+
+var getFontFaces = function () {
+    var re = [],
+        o = {},
+        sheet = document.styleSheets,
+        rule = null,
+        i = sheet.length, j;
+    while (0 <= --i) {
+        rule = sheet[i].rules || sheet[i].cssRules || [];
+        j = rule.length;
+        while (0 <= --j) {
+            if (rule[j].constructor.name === 'CSSFontFaceRule') { // rule[j].cssText.slice(0, 10).toLowerCase() === '@font-face'
+                re.push(rule[j].cssText);
+                o[rule[j].style.fontFamily] = rule[j].style.src;
+            };
+        }
+    }
+    return re;
 };
 
 var PropertyTable = {
@@ -136,7 +159,8 @@ var PropertyTable = {
         inherit: true
     },
     'word-break': {},
-    'word-wrap': {}
+    'word-wrap': {},
+    'content': {}
 };
 
 var cleanComputedStyle = function (cs) {
@@ -158,11 +182,11 @@ var propNameCamelify = function (name) {
 
 var getFullStyle = function (dom, pseudo) {
     var cs = getComputedStyle.apply(window, arguments);
-    var ncs = getNodeDefaultCS(dom.nodeName.toLowerCase());
+    var ncs = getNodeDefaultCS(pseudo ? 'span' : dom.nodeName.toLowerCase());
     var re = {};
     for (var prop in PropertyTable) {
         var cprop = propNameCamelify(prop);
-        if (cs[cprop] && cs[cprop] !== ncs[cprop]
+        if (cs[cprop] && (cs[cprop] !== ncs[cprop] || preventDefaultProps[dom.nodeName.toLowerCase() + ' ' + prop])
             && (!PropertyTable[prop].ignore || !PropertyTable[prop].ignore(cs[cprop]))) {
             re[prop] = cs[cprop];
         }
@@ -190,15 +214,19 @@ var preventDefaultProps = {
     'a text-decoration': true
 };
 
-var getMetaData_test = function (dom) {
+var getMetaData = function (dom) {
     var metaShow = getFullMetaData(dom);
     dom.style.display = 'none';
     var metaHide = getFullMetaData(dom);
     var patch = function (node1, node2) {
         if (!node1.style) return;
         for (var p in node1.style) {
-            if (/px/.test(node1.style[p])) {
+            if (/px/.test(node1.style[p])
+                && p !== 'transform' && p != 'transition') {
                 node1.style[p] = node2.style[p];
+                if (node1.style[p] === 'auto' || node1.style[p] === undefined) {
+                    delete node1.style[p];
+                }
             }
         }
         if (node1.childNodes) {
@@ -210,7 +238,7 @@ var getMetaData_test = function (dom) {
     patch(metaShow, metaHide);
     return metaShow;
 };
-var getMetaData = function (dom) {
+var getMetaData_test = function (dom) {
     var display = window.getComputedStyle(dom)['display'];
     dom.style.display = 'none';
     var re = getFullMetaData(dom);
@@ -306,7 +334,7 @@ var addCssRule = function (nodeName, obj, pseudo) {
     }
     if (!nodeTypeCount[nodeName]) nodeTypeCount[nodeName] = 0;
     nodeTypeCount[nodeName]++;
-    var className = nodeName + nodeTypeCount[nodeName];
+    var className = nodeName.toUpperCase() + nodeTypeCount[nodeName];
     cssRuleValueHash2Name[selfHash] = className;
     cssRuleName2ValueHash[className + '::before'] = pBeforeHash;
     cssRuleName2ValueHash[className + '::after'] = pAfterHash;
