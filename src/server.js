@@ -14,12 +14,8 @@ var allowCrossDomain = function (req, res, next) {
     next();
 };
 
-// app.use(express.bodyParser());
-// app.use(express.cookieParser());
-// app.use(express.session({secret: 'cool beans'}));
-// app.use(express.methodOverride());
 app.use(allowCrossDomain);
-// app.use(app.router);
+
 app.use(express.static(__dirname));
 
 app.get('/get/:url', function (req, res) {

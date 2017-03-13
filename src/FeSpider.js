@@ -9,7 +9,7 @@
 (function () {
 
     var conf = {
-        fetchFont: true
+        fetchFont: false
     };
 
     /**
@@ -27,8 +27,44 @@
         return hash;
     };
     
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function (s) {
+            if (typeof s !== 'string') return false;
+            if (s.length > this.length) return false;
+            return (this.substr(this.length - s.length) === s);
+        };
+    }
+    
+    var parseUrl = function (url) {
+        var parser = document.createElement('a');
+        parser.href = url;
+        return {
+            protocol: parser.protocol,
+            host: parser.host,
+            path: parser.pathname,
+            search: parser.search,
+            hash: parser.hash
+        };
+    };
+    var recoverUrl = function (base, target) {
+        if (target.startsWith('http://') || target.startsWith('https://') || target.startsWith('data:')) return target;
+        base = recoverUrl(window.location.href, base);
+        var b = parseUrl(base);
+        if (target.startsWith('//')) return b.protocol + target;
+        if (target.startsWith('/')) return b.protocol + '//' + b.host + target;
+        if (b.path.endsWith('/')) return b.protocol + '//' + b.host + b.path + target;
+        return b.protocol + '//' + b.host + b.path.substring(0, b.path.lastIndexOf('/')) + '/' + target;
+    };
     var recoverCssUrls = function (cssText, baseUrl) {
-        // TODO
+        var replacer = function (s, p1) {
+            var inner = p1;
+            if (p1.charAt(1) === "'" && p1.charAt(p1.length - 2) === "'") inner = p1.substr(2, p1.length - 4);
+            else if (p1.charAt(1) === '"' && p1.charAt(p1.length - 2) === '"') inner = p1.substr(2, p1.length - 4);
+            else inner = p1.substr(1, p1.length - 2);
+            if (inner.startsWith('data:')) return '(' + inner + ')';
+            return '(\'' + recoverUrl(baseUrl, inner) + '\')';
+        };
+        cssText = cssText.replace(/\((.*?)\)/g, replacer);
         return cssText;
     };
 
@@ -38,22 +74,24 @@
             i = sheet.length, j;
         while (0 <= --i) {
             if (sheet[i].href) {
-                fetch('http://127.0.0.1:3663/get/' + encodeURIComponent(sheet[i].href), {
-                    mode: 'cors',
-                    headers: {'Content-Type': 'text/plain'}
-                }).then(res => {
-                    res.text().then(data => {
-                        var regExp = /@font-face\s*\{[^}]+}/g;
-                        var results = data.match(regExp);
-                        if (results) {
-                            for (let result of results) {
-                                doWithCss && doWithCss(recoverCssUrls(result, sheet[i].href));
+                (function (cssUrl) {
+                    fetch('http://127.0.0.1:3663/get/' + encodeURIComponent(cssUrl), {
+                        mode: 'cors',
+                        headers: {'Content-Type': 'text/plain'}
+                    }).then(res => {
+                        res.text().then(data => {
+                            var regExp = /@font-face\s*\{[^}]+}/g;
+                            var results = data.match(regExp);
+                            if (results) {
+                                for (let result of results) {
+                                    doWithCss && doWithCss(recoverCssUrls(result, cssUrl));
+                                }
                             }
-                        }
+                        });
+                    }).catch(err => {
+                        console.error(err);
                     });
-                }).catch(err => {
-                    console.error(err);
-                });
+                })(sheet[i].href);
             } else {
                 rule = sheet[i].rules || sheet[i].cssRules || [];
                 j = rule.length;
