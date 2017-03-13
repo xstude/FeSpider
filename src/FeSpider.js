@@ -117,8 +117,8 @@
         'bottom': {},
         'left': {},
         'background': {},
-        'background-color': {},
-        'background-size': {},
+        // 'background-color': {},
+        // 'background-size': {},
         'margin': {},
         // 'margin-top': {},
         // 'margin-right': {},
@@ -186,6 +186,7 @@
         'font': {
             inherit: true
         },
+        /*
         'font-family': {
             inherit: true
         },
@@ -198,6 +199,7 @@
         'font-style': {
             inherit: true
         },
+        */
         'letter-spacing': {
             inherit: true
         },
