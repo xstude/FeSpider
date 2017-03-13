@@ -136,6 +136,9 @@
         'font-weight': {
             inherit: true
         },
+        'font-style': {
+            inherit: true
+        },
         'letter-spacing': {
             inherit: true
         },
@@ -270,6 +273,12 @@
         return re;
     };
 
+    var reservedAttrs = {
+        'a': ['href', 'target'],
+        'img': ['src'],
+        'input': ['placeholder']
+    };
+    
     var getFullMetaData = function (dom) {
         var type = dom.nodeName.toLowerCase();
         if (type === 'meta') return null;
@@ -285,20 +294,14 @@
             style: getFullStyle(dom),
             attrs: {}
         };
-        switch (type) {
-            case 'a':
-                var href = dom.getAttribute('href');
-                var target = dom.getAttribute('target');
-                var title = dom.getAttribute('title');
-                if (href) meta.attrs.href = href;
-                if (target) meta.attrs.target = target;
-                if (title) meta.attrs.title = title;
-                break;
-            case 'img':
-                var src = dom.getAttribute('src');
-                if (src) meta.attrs.src = src;
-                break;
+        
+        if (reservedAttrs[type]) {
+            for (let an of reservedAttrs[type]) {
+                var av = dom.getAttribute(an);
+                if (av) meta.attrs[an] = av;
+            }
         }
+        
         if (Object.keys(meta.attrs).length === 0) {
             delete meta.attrs;
         }
