@@ -1,0 +1,28 @@
+{
+  "name": "fespider",
+  "version": "1.2.0",
+  "description": "frontend element spider",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/shenfe/FeSpider"
+  },
+  "keywords": [
+    "frontend",
+    "element",
+    "spider"
+  ],
+  "author": "keshen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shenfe/FeSpider/issues"
+  },
+  "homepage": "https://github.com/shenfe/FeSpider",
+  "dependencies": {
+    "express": "^4.15.2",
+    "superagent": "^3.5.0"
+  }
+}

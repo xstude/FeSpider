@@ -9,7 +9,7 @@
 (function () {
 
     var conf = {
-        fetchFont: false
+        fetchFont: true
     };
 
     /**
@@ -26,24 +26,44 @@
         }
         return hash;
     };
+    
+    var recoverCssUrls = function (cssText, baseUrl) {
+        // TODO
+        return cssText;
+    };
 
-    var getFontFaces = function () {
-        var re = [],
-            o = {},
-            sheet = document.styleSheets,
+    var getFontFaces = function (doWithCss) {
+        var sheet = document.styleSheets,
             rule = null,
             i = sheet.length, j;
         while (0 <= --i) {
-            rule = sheet[i].rules || sheet[i].cssRules || [];
-            j = rule.length;
-            while (0 <= --j) {
-                if (rule[j].constructor.name === 'CSSFontFaceRule') { // rule[j].cssText.slice(0, 10).toLowerCase() === '@font-face'
-                    re.push(rule[j].cssText);
-                    o[rule[j].style.fontFamily] = rule[j].style.src;
-                };
+            if (sheet[i].href) {
+                fetch('http://127.0.0.1:3663/get/' + encodeURIComponent(sheet[i].href), {
+                    mode: 'cors',
+                    headers: {'Content-Type': 'text/plain'}
+                }).then(res => {
+                    res.text().then(data => {
+                        var regExp = /@font-face\s*\{[^}]+}/g;
+                        var results = data.match(regExp);
+                        if (results) {
+                            for (let result of results) {
+                                doWithCss && doWithCss(recoverCssUrls(result, sheet[i].href));
+                            }
+                        }
+                    });
+                }).catch(err => {
+                    console.error(err);
+                });
+            } else {
+                rule = sheet[i].rules || sheet[i].cssRules || [];
+                j = rule.length;
+                while (0 <= --j) {
+                    if (rule[j].constructor.name === 'CSSFontFaceRule') { // rule[j].cssText.slice(0, 10).toLowerCase() === '@font-face'
+                        doWithCss && doWithCss(recoverCssUrls(rule[j].cssText, window.location.href));
+                    };
+                }
             }
         }
-        return re;
     };
 
     var PropertyTable = {
@@ -437,10 +457,17 @@
     var styleSheet;
 
     var presentDom = function (dom) {
+        styleSheet = document.createElement('style');
+        
+        if (conf.fetchFont) {
+            getFontFaces(cssText => {
+                styleSheet.innerHTML += cssText;
+            });
+        }
+        
         var rootMeta = getMetaData(dom);
         document.head.innerHTML = '';
         document.body.innerHTML = '';
-        styleSheet = document.createElement('style');
         document.head.appendChild(styleSheet);
 
         document.body.appendChild(buildDom(rootMeta));
