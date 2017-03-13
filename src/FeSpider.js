@@ -356,7 +356,9 @@
         if (reservedAttrs[type]) {
             for (let an of reservedAttrs[type]) {
                 var av = dom.getAttribute(an);
-                if (av) meta.attrs[an] = av;
+                if (av) {
+                    meta.attrs[an] = (an === 'href' || an === 'src') ? recoverUrl(window.location.href, av) : av;
+                }
             }
         }
         
