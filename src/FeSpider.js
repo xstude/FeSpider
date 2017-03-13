@@ -183,13 +183,14 @@
     };
 
     var getFullStyle = function (dom, pseudo) {
-        var cs = getComputedStyle.apply(window, arguments);
-        var ncs = getNodeDefaultCS(pseudo ? 'span' : dom.nodeName.toLowerCase());
+        var cs = pseudo ? getComputedStyle(dom) : getComputedStyle(dom, ':' + pseudo);
+        var ncs = (pseudo && !pseudoClassTable[pseudo].element) ? getComputedStyle(dom) 
+            : getNodeDefaultCS((pseudo && pseudoClassTable[pseudo].element === 'inline') ? 'span' : dom.nodeName.toLowerCase());
         var re = {};
         for (var prop in PropertyTable) {
             var cprop = propNameCamelify(prop);
-            if (cs[cprop] && (cs[cprop] !== ncs[cprop] || preventDefaultProps[dom.nodeName.toLowerCase() + ' ' + prop])
-                && (!PropertyTable[prop].ignore || !PropertyTable[prop].ignore(cs[cprop]))) {
+            if (cs[cprop] && (preventDefaultProps[dom.nodeName.toLowerCase() + ' ' + prop]
+                || (cs[cprop] !== ncs[cprop] && (!PropertyTable[prop].ignore || !PropertyTable[prop].ignore(cs[cprop]))))) {
                 re[prop] = cs[cprop];
             }
         }
@@ -197,23 +198,44 @@
         return re;
     };
 
-    var getPseudoElements = function (dom) {
+    var pseudoClassTable = {
+        'before': { element: 'inline' },
+        'after': { element: 'inline' }
+    };
+    var getPseudoElements = function (dom, domStyle) {
         var re = {};
-        var beforeElemCs = getComputedStyle(dom, '::before');
-        if (beforeElemCs.content) {
-            re.before = getFullStyle(dom, '::before');
+        for (var p in pseudoClassTable) {
+            if (pseudoClassTable[p].element) {
+                var cs = getComputedStyle(dom, ':' + p);
+                if (cs.content) {
+                    re[p] = getFullStyle(dom, p);
+                }
+            } else {
+                var ps = getFullStyle(dom, p);
+                var stylePatches = {};
+                var diff = false;
+                for (var i in domStyle) {
+                    if (domStyle[i] !== ps[i]) {
+                        stylePatches[i] = ps[i];
+                        diff = true;
+                    }
+                }
+                if (diff) {
+                    re[p] = stylePatches;
+                    console.log(stylePatches);
+                }
+            }
         }
-        var afterElemCs = getComputedStyle(dom, '::after');
-        if (afterElemCs.content) {
-            re.after = getFullStyle(dom, '::after');
-        }
-        if (!re.before && !re.after) return null;
+        if (Object.keys(re).length === 0) return null;
         return re;
     };
 
     var preventDefaultProps = {
         'a color': true,
-        'a text-decoration': true
+        'a text-decoration': true,
+        'input outline': true,
+        'input border': true,
+        'textarea outline': true
     };
 
     var getMetaData = function (dom) {
@@ -241,7 +263,7 @@
         return metaShow;
     };
     var getMetaData_test = function (dom) {
-        var display = window.getComputedStyle(dom)['display'];
+        var display = getComputedStyle(dom)['display'];
         dom.style.display = 'none';
         var re = getFullMetaData(dom);
         re.style.display = display;
@@ -281,7 +303,7 @@
             delete meta.attrs;
         }
 
-        meta.pseudo = getPseudoElements(dom);
+        meta.pseudo = getPseudoElements(dom, meta.style);
         if (!meta.pseudo) delete meta.pseudo;
 
         if (dom.childNodes.length) {
@@ -322,27 +344,47 @@
     var addCssRule = function (nodeName, obj, pseudo) {
         var self = stringOfStyleObj(obj);
         var selfHash = self.hashCode();
-        var pBefore = !pseudo ? null : (!pseudo.before ? null : stringOfStyleObj(pseudo.before));
-        var pBeforeHash = pBefore ? pBefore.hashCode() : null;
-        var pAfter = !pseudo ? null : (!pseudo.after ? null : stringOfStyleObj(pseudo.after));
-        var pAfterHash = pAfter ? pAfter.hashCode() : null;
-
-        if (cssRuleValueHash2Name[selfHash]) {
-            var existingName = cssRuleValueHash2Name[selfHash];
-            if (cssRuleName2ValueHash[existingName + '::before'] === pBeforeHash
-                && cssRuleName2ValueHash[existingName + '::after'] === pAfterHash) {
-                return existingName;
+        
+        var pseudoValues = {};
+        var pseudoHashes = {};
+        if (pseudo) {
+            for (var p in pseudo) {
+                pseudoValues[p] = !pseudo[p] ? undefined : stringOfStyleObj(pseudo[p]);
+                pseudoHashes[p] = pseudoValues[p] ? pseudoValues[p].hashCode() : undefined;
             }
         }
+
+        if (cssRuleValueHash2Name[selfHash]) {
+            var existingNameList = cssRuleValueHash2Name[selfHash];
+            for (let existingName of existingNameList) {
+                var consistent = true;
+                for (var p in pseudoClassTable) {
+                    if (cssRuleName2ValueHash[existingName + ':' + p] !== pseudoHashes[p]) {
+                        consistent = false;
+                        break;
+                    }
+                }
+                if (consistent) {
+                    return existingName;
+                }
+            }
+        }
+        
         if (!nodeTypeCount[nodeName]) nodeTypeCount[nodeName] = 0;
         nodeTypeCount[nodeName]++;
         var className = nodeName.toUpperCase() + nodeTypeCount[nodeName];
-        cssRuleValueHash2Name[selfHash] = className;
-        cssRuleName2ValueHash[className + '::before'] = pBeforeHash;
-        cssRuleName2ValueHash[className + '::after'] = pAfterHash;
+        
+        if (!cssRuleValueHash2Name[selfHash]) cssRuleValueHash2Name[selfHash] = [];
+        cssRuleValueHash2Name[selfHash].push(className);
+        for (var p in pseudoHashes) {
+            if (pseudoHashes[p]) cssRuleName2ValueHash[className + ':' + p] = pseudoHashes[p];
+        }
+        
         styleSheet.innerHTML += '.' + className + '{' + self + '}';
-        if (pBefore) styleSheet.innerHTML += '.' + className + '::before' + '{' + pBefore + '}';
-        if (pAfter) styleSheet.innerHTML += '.' + className + '::after' + '{' + pAfter + '}';
+        for (var p in pseudoValues) {
+            if (pseudoValues[p]) styleSheet.innerHTML += '.' + className + ':' + p + '{' + pseudoValues[p] + '}';
+        }
+        
         return className;
     };
 
