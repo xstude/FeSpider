@@ -420,7 +420,7 @@
         if (meta.attrs) {
             for (var k in meta.attrs) {
                 dom.setAttribute(k, meta.attrs[k]);
-            };
+            }
         }
 
         if (meta.childNodes) {
