@@ -183,7 +183,7 @@
     };
 
     var getFullStyle = function (dom, pseudo) {
-        var cs = pseudo ? getComputedStyle(dom) : getComputedStyle(dom, ':' + pseudo);
+        var cs = !pseudo ? getComputedStyle(dom) : getComputedStyle(dom, ':' + pseudo);
         var ncs = (pseudo && !pseudoClassTable[pseudo].element) ? getComputedStyle(dom) 
             : getNodeDefaultCS((pseudo && pseudoClassTable[pseudo].element === 'inline') ? 'span' : dom.nodeName.toLowerCase());
         var re = {};
