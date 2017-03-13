@@ -9,7 +9,8 @@
 (function () {
 
     var conf = {
-        fetchFont: false
+        fetchFont: false,
+        serverHost: 'http://127.0.0.1:3663'
     };
 
     /**
@@ -75,7 +76,7 @@
         while (0 <= --i) {
             if (sheet[i].href) {
                 (function (cssUrl) {
-                    fetch('http://127.0.0.1:3663/get/' + encodeURIComponent(cssUrl), {
+                    fetch(conf.serverHost + '/get/' + encodeURIComponent(cssUrl), {
                         mode: 'cors',
                         headers: {'Content-Type': 'text/plain'}
                     }).then(res => {
@@ -511,6 +512,11 @@
         document.head.appendChild(styleSheet);
 
         document.body.appendChild(buildDom(rootMeta));
+        
+        return {
+            style: styleSheet.innerHTML,
+            html: document.body.innerHTML
+        };
     };
 
     window.fespider = {
