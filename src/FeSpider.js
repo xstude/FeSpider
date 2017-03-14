@@ -69,11 +69,23 @@
         return cssText;
     };
 
+    var getCssLinks = function () {
+        var sheet = document.styleSheets,
+            i = sheet.length;
+        var re = [];
+        while (0 <= --i) {
+            if (sheet[i].href) {
+                re.push(sheet[i].href);
+            }
+        }
+        return re;
+    };
     var getFontFaces = function () {
         var sheet = document.styleSheets,
             rule = null,
             i = sheet.length, j;
         var urlQueue = [];
+        var interRules = [];
         while (0 <= --i) {
             if (sheet[i].href) {
                 urlQueue.push(sheet[i].href);
@@ -82,7 +94,7 @@
                 j = rule.length;
                 while (0 <= --j) {
                     if (rule[j].constructor.name === 'CSSFontFaceRule') {
-                        return recoverCssUrls(rule[j].cssText, window.location.href);
+                        interRules.push(recoverCssUrls(rule[j].cssText, window.location.href));
                     };
                 }
             }
@@ -95,7 +107,7 @@
                 return res.text().then(data => {
                     var regExp = /@font-face\s*\{[^}]+}/g;
                     var results = data.match(regExp) || [];
-                    return results.map(result => recoverCssUrls(result, url));
+                    return interRules.concat(results.map(result => recoverCssUrls(result, url)));
                 });
             }).catch(err => {
                 console.error(err);
@@ -409,6 +421,7 @@
         return meta;
     };
 
+    var styleSheetData = {};
     var nodeTypeCount = {};
     var cssRuleValueHash2Name = {};
     var cssRuleName2ValueHash = {};
@@ -457,10 +470,11 @@
         for (var p in pseudoHashes) {
             if (pseudoHashes[p]) cssRuleName2ValueHash[className + ':' + p] = pseudoHashes[p];
         }
+        cssRuleName2ValueHash[className] = selfHash;
         
-        styleSheet.innerHTML += '.' + className + '{' + self + '}';
+        styleSheetData['.' + className] = self;
         for (var p in pseudoValues) {
-            if (pseudoValues[p]) styleSheet.innerHTML += '.' + className + ':' + p + '{' + pseudoValues[p] + '}';
+            if (pseudoValues[p]) styleSheetData['.' + className + ':' + p] = pseudoValues[p];
         }
         
         return className;
@@ -509,31 +523,56 @@
         return dom;
     };
 
-    var styleSheet;
-
-    var presentDom = function (dom) {
-        styleSheet = document.createElement('style');
+    var presentDom = function (dom, moduleName) {
+        moduleName = moduleName || 'module';
+        var styleSheet = document.createElement('style');
+        
+        var outputFlag = 0;
+        var output = () => {
+            console.log({
+                style: styleSheet.innerHTML,
+                html: document.body.innerHTML
+            });
+        };
+        
+        var promises = [];
         
         if (conf.fetchFont) {
-            getFontFaces().then(results => {
+            promises.push(getFontFaces().then(results => {
                 styleSheet.innerHTML = results.map(result => result.join('')).join('') + styleSheet.innerHTML;
                 console.log('[SUCCESS] to get all font-face rules.');
             }).catch(() => {
                 console.error('[ERROR] to get all font-face rules.');
-            });
+            }));
         }
         
         var rootMeta = getMetaData(dom);
         document.head.innerHTML = '';
         document.body.innerHTML = '';
         document.head.appendChild(styleSheet);
-
-        document.body.appendChild(buildDom(rootMeta));
         
-        return {
-            style: styleSheet.innerHTML,
-            html: document.body.innerHTML
-        };
+        var ndom = buildDom(rootMeta);
+        var moduleClassNameAlready = ndom.className;
+        var moduleClassAlone = !ndom.getElementsByClassName('moduleClassNameAlready').length;
+        ndom.className = moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready);
+        var styleString = '';
+        for (var sel in styleSheetData) {
+            if (sel === '.' + moduleClassNameAlready || sel.startsWith('.' + moduleClassNameAlready + ':')) {
+                if (moduleClassAlone) {
+                    var selector = '.' + moduleName + (sel.startsWith('.' + moduleClassNameAlready + ':') ? sel.substr(sel.indexOf(':')) : '');
+                    styleString += selector + '{' + styleSheetData[sel] + '}';
+                    continue;
+                } else {
+                    styleString += '.' + moduleName + sel + '{' + styleSheetData[sel] + '}';
+                }
+            }
+            styleString += '.' + moduleName + ' ' + sel + '{' + styleSheetData[sel] + '}';
+        }
+        styleSheet.innerHTML += styleString;
+
+        document.body.appendChild(ndom);
+        
+        Promise.all(promises).then(() => output());
     };
 
     window.fespider = {
