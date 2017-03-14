@@ -523,7 +523,14 @@
         return dom;
     };
 
-    var presentDom = function (dom, moduleName) {
+    var extendObj = function (dest, src) {
+        for (var i in src) {
+            dest[i] = src[i];
+        }
+        return dest;
+    };
+    var presentDom = function (dom, moduleName, options) {
+        extendObj(conf, options);
         moduleName = moduleName || 'module';
         var styleSheet = document.createElement('style');
         
