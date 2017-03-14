@@ -10,6 +10,14 @@ To get your target element, just inspect it and invoke `present` method. When yo
 
 That's it.
 
+## Advance
+
+If you want to analyze css file contents to extract `@font-face` information, please set `conf.fetchFont: true`. Then start the server as below to listen to file url fetching requests on port 3663 by default.
+
+```
+node server.js
+```
+
 ## Goodness
 
 Css styles would be optimized. Every tag has just one class name. Tags having the same styles would be the same class.
