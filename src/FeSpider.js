@@ -9,7 +9,7 @@
 (function () {
 
     var conf = {
-        fetchFont: false,
+        fetchFont: true,
         serverHost: 'http://127.0.0.1:3663'
     };
 
@@ -62,56 +62,70 @@
             if (p1.charAt(1) === "'" && p1.charAt(p1.length - 2) === "'") inner = p1.substr(2, p1.length - 4);
             else if (p1.charAt(1) === '"' && p1.charAt(p1.length - 2) === '"') inner = p1.substr(2, p1.length - 4);
             else inner = p1.substr(1, p1.length - 2);
-            if (inner.startsWith('data:')) return '(' + inner + ')';
-            return '(\'' + recoverUrl(baseUrl, inner) + '\')';
+            if (inner.startsWith('data:')) return 'url(' + inner + ')';
+            return 'url(\'' + recoverUrl(baseUrl, inner) + '\')';
         };
-        cssText = cssText.replace(/\((.*?)\)/g, replacer);
+        cssText = cssText.replace(/url\s*\((.*?)\)/g, replacer);
         return cssText;
     };
 
-    var getFontFaces = function (doWithCss) {
+    var getFontFaces = function () {
         var sheet = document.styleSheets,
             rule = null,
             i = sheet.length, j;
+        var urlQueue = [];
         while (0 <= --i) {
             if (sheet[i].href) {
-                (function (cssUrl) {
-                    fetch(conf.serverHost + '/get/' + encodeURIComponent(cssUrl), {
-                        mode: 'cors',
-                        headers: {'Content-Type': 'text/plain'}
-                    }).then(res => {
-                        res.text().then(data => {
-                            var regExp = /@font-face\s*\{[^}]+}/g;
-                            var results = data.match(regExp);
-                            if (results) {
-                                for (let result of results) {
-                                    doWithCss && doWithCss(recoverCssUrls(result, cssUrl));
-                                }
-                            }
-                        });
-                    }).catch(err => {
-                        console.error(err);
-                    });
-                })(sheet[i].href);
+                urlQueue.push(sheet[i].href);
             } else {
                 rule = sheet[i].rules || sheet[i].cssRules || [];
                 j = rule.length;
                 while (0 <= --j) {
-                    if (rule[j].constructor.name === 'CSSFontFaceRule') { // rule[j].cssText.slice(0, 10).toLowerCase() === '@font-face'
-                        doWithCss && doWithCss(recoverCssUrls(rule[j].cssText, window.location.href));
+                    if (rule[j].constructor.name === 'CSSFontFaceRule') {
+                        return recoverCssUrls(rule[j].cssText, window.location.href);
                     };
                 }
             }
         }
+        return Promise.all(urlQueue.map(url => {
+            return fetch(conf.serverHost + '/get/' + encodeURIComponent(url), {
+                mode: 'cors',
+                headers: {'Content-Type': 'text/plain'}
+            }).then(res => {
+                return res.text().then(data => {
+                    var regExp = /@font-face\s*\{[^}]+}/g;
+                    var results = data.match(regExp) || [];
+                    return results.map(result => recoverCssUrls(result, url));
+                });
+            }).catch(err => {
+                console.error(err);
+            });
+        }));
     };
 
     var PropertyTable = {
         'display': {},
+        'zoom': {},
+        'flex-direction': {},
+        'flex-wrap': {},
+        'flex-flow': {},
+        'justify-content': {},
+        'align-items': {},
+        'align-content': {},
+        'order': {},
+        'flex-grow': {},
+        'flex-shrink': {},
+        'flex-basis': {},
         'flex': {},
+        'align-self': {},
         'position': {},
         'z-index': {},
         'width': {},
         'height': {},
+        'max-width': {},
+        'min-width': {},
+        'max-height': {},
+        'min-height': {},
         'top': {},
         'right': {},
         'bottom': {},
@@ -177,12 +191,13 @@
         'text-indent': {
             inherit: true
         },
+        'text-overflow': {},
         'overflow': {},
-        'clear': {},
         'cursor': {
             inherit: true
         },
         'float': {},
+        'clear': {},
         'font': {
             inherit: true
         },
@@ -209,24 +224,20 @@
         'list-style': {
             inherit: true
         },
-        'max-width': {},
-        'min-width': {},
-        'max-height': {},
-        'min-height': {},
         'opacity': {},
         'visibility': {
             inherit: true
         },
         'text-decoration': {},
-        'transform': {},
-        'transition': {},
         'vertical-align': {},
         'white-space': {
             inherit: true
         },
         'word-break': {},
         'word-wrap': {},
-        'content': {}
+        'content': {},
+        'transform': {},
+        'transition': {}
     };
 
     var cleanComputedStyle = function (cs) {
@@ -286,7 +297,7 @@
                 }
                 if (diff) {
                     re[p] = stylePatches;
-                    console.log(stylePatches);
+                    console.log('[LOG]', stylePatches);
                 }
             }
         }
@@ -299,7 +310,8 @@
         'a text-decoration': true,
         'input outline': true,
         'input border': true,
-        'textarea outline': true
+        'textarea outline': true,
+        'textarea border': true
     };
 
     var getMetaData = function (dom) {
@@ -503,8 +515,11 @@
         styleSheet = document.createElement('style');
         
         if (conf.fetchFont) {
-            getFontFaces(cssText => {
-                styleSheet.innerHTML += cssText;
+            getFontFaces().then(results => {
+                styleSheet.innerHTML = results.map(result => result.join('')).join('') + styleSheet.innerHTML;
+                console.log('[SUCCESS] to get all font-face rules.');
+            }).catch(() => {
+                console.error('[ERROR] to get all font-face rules.');
             });
         }
         

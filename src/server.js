@@ -19,7 +19,9 @@ app.use(allowCrossDomain);
 app.use(express.static(__dirname));
 
 app.get('/get/:url', function (req, res) {
-    superagent.get(decodeURIComponent(req.params.url))
+    var url = decodeURIComponent(req.params.url);
+    console.log('get ' + url);
+    superagent.get(url)
         .then(function (pres, err) {
             res.send(pres.text);
         });
