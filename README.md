@@ -6,7 +6,7 @@ Pull a whole element with css styles from the front page.
 
 FeSpider provides two methods, `getMetaData` and `present`, each of which accepts one parameter, an HTML element.
 
-To get your target element, just inspect it and invoke `present` method. When you inspect the target with Chrome dev tool, the element has a reference `$0`. Then type and execute `window.fespider.present($0)` in the console.
+To get your target element, just inspect it and invoke `present` method. When you inspect the target with Chrome dev tool, the element has a reference `$0`. Then type and execute `window.fespider.present($0)` or `window.fespider.present($0, 'my-module-name')` in the console.
 
 That's it.
 
