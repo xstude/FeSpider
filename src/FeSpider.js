@@ -9,7 +9,7 @@
 (function () {
 
     var conf = {
-        fetchFont: false,
+        fetchFont: true,
         serverHost: 'http://127.0.0.1:3663'
     };
 
@@ -320,6 +320,7 @@
     var preventDefaultProps = {
         'a color': true,
         'a text-decoration': true,
+        'em font': true,
         'input outline': true,
         'input border': true,
         'textarea outline': true,
