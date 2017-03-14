@@ -9,7 +9,7 @@
 (function () {
 
     var conf = {
-        fetchFont: true,
+        fetchFont: false,
         serverHost: 'http://127.0.0.1:3663'
     };
 
@@ -512,13 +512,13 @@
             }
         }
 
+        dom.className = addCssRule(meta.nodeName, meta.style, meta.pseudo);
+
         if (meta.childNodes) {
             meta.childNodes.forEach(function (child) {
                 dom.appendChild(buildDom(child));
             });
         }
-
-        dom.className = addCssRule(meta.nodeName, meta.style, meta.pseudo);
 
         return dom;
     };
