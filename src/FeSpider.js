@@ -10,7 +10,9 @@
 
     var conf = {
         fetchFont: true,
-        serverHost: 'http://127.0.0.1:3663'
+        serverHost: 'http://127.0.0.1:3663',
+        pullContent: true,
+        generateType: 'html' // 'vue'
     };
 
     /**
@@ -482,15 +484,20 @@
     };
 
     var helperIframe;
-
-    var getNodeDefaultCS = function (nodeName) {
+    var getHelperIframe = function (iframeSrc) {
         var iframeId = 'qwe123';
-        if (!helperIframe) {
+        if (!window.frames[iframeId]) {
             helperIframe = document.createElement('iframe');
             helperIframe.id = iframeId;
             document.body.appendChild(helperIframe);
         }
-        var iframeDoc = helperIframe.contentDocument;
+        if (iframeSrc) helperIframe.src = iframeSrc;
+        return helperIframe;
+    };
+
+    var getNodeDefaultCS = function (nodeName) {
+        var iframeIns = getHelperIframe();
+        var iframeDoc = iframeIns.contentDocument;
         var iframeNodes = iframeDoc.getElementsByTagName(nodeName);
         var node;
         if (iframeNodes.length) node = iframeNodes[0];
@@ -534,13 +541,35 @@
         extendObj(conf, options);
         moduleName = moduleName || 'module';
         var styleSheet = document.createElement('style');
+        var ndom;
         
-        var outputFlag = 0;
         var output = () => {
-            console.log({
+            var outputData = {
+                name: moduleName,
+                type: conf.generateType,
                 style: styleSheet.innerHTML,
-                html: document.body.innerHTML
-            });
+                html: ndom.outerHTML
+            }
+            console.log(outputData);
+            var postData = new FormData();
+            postData.append('json', JSON.stringify(outputData));
+            if (conf.pullContent) {
+                fetch(conf.serverHost + '/post', {
+                    method: 'post',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': '*'
+                    },
+                    body: postData
+                }).then(function (res) { return res.json(); })
+                .then(function (res) {
+                    if (res.code === 200) {
+                        console.log('[SUCCESS] to save the content.');
+                    } else {
+                        console.error('[ERROR] to save the content.');
+                    }
+                });
+            }
         };
         
         var promises = [];
@@ -559,7 +588,7 @@
         document.body.innerHTML = '';
         document.head.appendChild(styleSheet);
         
-        var ndom = buildDom(rootMeta);
+        ndom = buildDom(rootMeta);
         var moduleClassNameAlready = ndom.className;
         var moduleClassAlone = !ndom.getElementsByClassName('moduleClassNameAlready').length;
         ndom.className = moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready);

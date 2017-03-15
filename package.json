@@ -23,6 +23,8 @@
   "homepage": "https://github.com/shenfe/FeSpider",
   "dependencies": {
     "express": "^4.15.2",
-    "superagent": "^3.5.0"
+    "superagent": "^3.5.0",
+    "body-parser": "^1.15.2",
+    "connect-multiparty": "^2.0.0"
   }
 }
