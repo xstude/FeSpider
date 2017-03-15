@@ -8,7 +8,7 @@ FeSpider provides two methods, `getMetaData` and `present`, each of which accept
 
 To get your target element, just inspect it and invoke `present` method. When you inspect the target with Chrome dev tool, the element has a reference `$0`. Then type and execute `window.fespider.present($0)` in the console. The `present` method also accepts the 2nd parameter (a module name) and the 3rd parameter (options to override the configuration).
 
-```
+```js
 fespider.present($0);
 fespider.present($0, 'my-module');
 fespider.present($0, 'my-module', {
