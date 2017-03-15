@@ -60,7 +60,7 @@ var trans = function (data) {
     return re;
 };
 
-var dirExists = function (path) {
+var pathExists = function (path) {
     try {
         fs.accessSync(path, fs.F_OK);
     } catch (e) {
@@ -69,15 +69,23 @@ var dirExists = function (path) {
     return true;
 };
 
-var dirHandler = function (path) {
-    if (!dirExists(path)) fs.mkdirSync(path, 0777);
+var mkDir = function (path) {
+    if (!pathExists(path)) fs.mkdirSync(path, 0777);
 };
-dirHandler(conf.pullDir);
+mkDir(conf.pullDir);
+
+var getNewFilePath = function (path, format) {
+    var count = '';
+    while (pathExists(path + count + '.' + format)) {
+        count = count ? (count + 1) : 1;
+    }
+    return path + count + '.' + format;
+};
 
 app.post('/post', multipartMiddleware, function (req, res) {
     var data = JSON.parse(req.body.json);
     console.log('/post: ' + data.name + '.' + data.type);
-    fs.writeFile(conf.pullDir + '/' + data.name + '.' + data.type, trans(data), function (err) {
+    fs.writeFile(getNewFilePath(conf.pullDir + '/' + data.name, data.type), trans(data), function (err) {
         if (err) throw err;
     });
     res.json({
