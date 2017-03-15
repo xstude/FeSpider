@@ -206,7 +206,8 @@
             inherit: true
         },
         'text-overflow': {},
-        'overflow': {},
+        'overflow-x': {},
+        'overflow-y': {},
         'cursor': {
             inherit: true
         },
