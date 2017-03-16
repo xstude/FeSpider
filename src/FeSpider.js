@@ -555,6 +555,8 @@
     };
 
     var buildDom = function (meta, inSvg) {
+        var collectCommonCssAmongAllChildren = true;
+        
         if (meta.nodeName === '#text') {
             return document.createTextNode(meta.value);
         }
@@ -570,10 +572,48 @@
                 dom.setAttribute(k, meta.attrs[k]);
             }
         }
-
-        dom.setAttribute('class', addCssRule(meta.nodeName, meta.style, meta.pseudo));
+        
+        var className = addCssRule(meta.nodeName, meta.style, meta.pseudo);
+        dom.setAttribute('class', className);
 
         if (meta.childNodes) {
+            if (collectCommonCssAmongAllChildren) {
+                /* find all-children-share styles */
+                var validChildCount = 0;
+                var childrenCssStat = {};
+                var allChildrenHave = {};
+                meta.childNodes.forEach(function (child) {
+                    if (child.nodeName !== '#text') {
+                        validChildCount++;
+                        if (child.style) {
+                            for (var i in child.style) {
+                                var key = i + ': ' + child.style[i];
+                                childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
+                            }
+                        }
+                    }
+                });
+                if (validChildCount > 2) {
+                    for (var i in childrenCssStat) {
+                        if (childrenCssStat[i] < validChildCount) continue;
+                        var splitPos = i.indexOf(': ');
+                        allChildrenHave[i.substr(0, splitPos)] = i.substr(splitPos + 2);
+                    }
+                    if (Object.keys(allChildrenHave).length) {
+                        meta.childNodes.forEach(function (child) {
+                            if (child.nodeName !== '#text') {
+                                for (var i in allChildrenHave) {
+                                    delete child.style[i];
+                                }
+                            }
+                        });
+                        /* add the common style rule for child nodes */
+                        styleSheetData['.' + className + '>*'] = stringOfStyleObj(allChildrenHave);
+                    }
+                }
+            }
+            
+            /* add child nodes */
             meta.childNodes.forEach(function (child) {
                 dom.appendChild(buildDom(child, inSvg));
             });
@@ -645,9 +685,10 @@
         ndom.setAttribute('class', moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready));
         var styleString = '';
         for (var sel in styleSheetData) {
-            if (sel === '.' + moduleClassNameAlready || sel.startsWith('.' + moduleClassNameAlready + ':')) {
+            if (sel === '.' + moduleClassNameAlready || sel.startsWith('.' + moduleClassNameAlready + ':')
+                || sel.startsWith('.' + moduleClassNameAlready + '>')) {
                 if (moduleClassAlone) {
-                    var selector = '.' + moduleName + (sel.startsWith('.' + moduleClassNameAlready + ':') ? sel.substr(sel.indexOf(':')) : '');
+                    var selector = '.' + moduleName + sel.substr(1 + moduleClassNameAlready.length);
                     styleString += selector + '{' + styleSheetData[sel] + '}';
                     continue;
                 } else {
