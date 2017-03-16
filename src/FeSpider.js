@@ -9,10 +9,10 @@
 (function () {
 
     var conf = {
-        fetchFont: true,
+        fetchFont: false,
         serverHost: 'http://127.0.0.1:3663',
-        pullContent: true,
-        generateType: 'html' // 'vue'
+        pullContent: false,
+        generateType: 'html' // 'html' | 'vue'
     };
 
     /**
@@ -252,7 +252,8 @@
         'word-wrap': {},
         'content': {},
         'transform': {},
-        'transition': {}
+        'transition': {},
+        'fill': {}
     };
 
     var cleanComputedStyle = function (cs) {
@@ -272,10 +273,10 @@
         return re;
     };
 
-    var getFullStyle = function (dom, pseudo) {
+    var getFullStyle = function (dom, pseudo, inSvg) {
         var cs = !pseudo ? getComputedStyle(dom) : getComputedStyle(dom, ':' + pseudo);
         var ncs = (pseudo && !pseudoClassTable[pseudo].element) ? getComputedStyle(dom) 
-            : getNodeDefaultCS((pseudo && pseudoClassTable[pseudo].element === 'inline') ? 'span' : dom.nodeName.toLowerCase());
+            : getNodeDefaultCS((pseudo && pseudoClassTable[pseudo].element === 'inline') ? 'span' : dom.nodeName.toLowerCase(), inSvg);
         var re = {};
         for (var prop in PropertyTable) {
             var cprop = propNameCamelify(prop);
@@ -292,16 +293,16 @@
         'before': { element: 'inline' },
         'after': { element: 'inline' }
     };
-    var getPseudoElements = function (dom, domStyle) {
+    var getPseudoElements = function (dom, domStyle, inSvg) {
         var re = {};
         for (var p in pseudoClassTable) {
             if (pseudoClassTable[p].element) {
                 var cs = getComputedStyle(dom, ':' + p);
                 if (cs.content) {
-                    re[p] = getFullStyle(dom, p);
+                    re[p] = getFullStyle(dom, p, inSvg);
                 }
             } else {
-                var ps = getFullStyle(dom, p);
+                var ps = getFullStyle(dom, p, inSvg);
                 var stylePatches = {};
                 var diff = false;
                 for (var i in domStyle) {
@@ -327,7 +328,8 @@
         'input outline': true,
         'input border': true,
         'textarea outline': true,
-        'textarea border': true
+        'textarea border': true,
+        'button border': true
     };
 
     var getMetaData = function (dom) {
@@ -368,8 +370,44 @@
         'input': ['placeholder']
     };
     
-    var getFullMetaData = function (dom) {
+    // notice: some attributes would be ignored by default, see variable 'ignoreTable' of function 'getAttributes'
+    var ignoredAttrs = {
+        'svg': [],
+        'svg/*': []
+    };
+    
+    var getAttributes = function (dom, ignoreAttrNames, allowAttrNames, filter) {
+        var re = {}, ignoreTable = {
+            'id': true,
+            'class': true,
+            'style': true
+        };
+        if (allowAttrNames) {
+            for (let an of allowAttrNames) {
+                var av = dom.getAttribute(an);
+                if (av) {
+                    re[an] = filter ? filter(an, av) : av;
+                }
+            }
+            return re;
+        }
+        if (ignoreAttrNames) {
+            for (let an of ignoreAttrNames) ignoreTable[an] = true;
+        }
+        var rawAttrs = dom.attributes;
+        for (var i = 0, len = rawAttrs.length; i < len; i++) {
+            var an = rawAttrs[i].name;
+            if (ignoreTable[an]) continue;
+            var av = rawAttrs[i].value;
+            re[an] = filter ? filter(an, av) : av;
+        }
+        
+        return re;
+    };
+    
+    var getFullMetaData = function (dom, keepAttrs, inSvg) {
         var type = dom.nodeName.toLowerCase();
+        inSvg = inSvg || (type === 'svg');
         if (type === 'meta') return null;
         if (type === '#comment') return null;
         if (type === '#text') {
@@ -380,30 +418,34 @@
         }
         var meta = {
             nodeName: type,
-            style: getFullStyle(dom),
-            attrs: {}
+            style: getFullStyle(dom, null, inSvg)
         };
         
-        if (reservedAttrs[type]) {
-            for (let an of reservedAttrs[type]) {
-                var av = dom.getAttribute(an);
-                if (av) {
-                    meta.attrs[an] = (an === 'href' || an === 'src') ? recoverUrl(window.location.href, av) : av;
-                }
-            }
+        if (keepAttrs) {
+            meta.attrs = getAttributes(dom);
+        } else if (ignoredAttrs[type]) {
+            meta.attrs = getAttributes(dom, ignoredAttrs[type]);
+        } else if (reservedAttrs[type]) {
+            meta.attrs = getAttributes(dom, null, reservedAttrs[type], (attrName, attrValue) => {
+                return (attrName === 'href' || attrName === 'src') ? recoverUrl(window.location.href, attrValue) : attrValue;
+            });
         }
         
-        if (Object.keys(meta.attrs).length === 0) {
+        if (ignoredAttrs[type + '/*']) {
+            keepAttrs = true;
+        }
+        
+        if (meta.attrs && Object.keys(meta.attrs).length === 0) {
             delete meta.attrs;
         }
 
-        meta.pseudo = getPseudoElements(dom, meta.style);
+        meta.pseudo = getPseudoElements(dom, meta.style, inSvg);
         if (!meta.pseudo) delete meta.pseudo;
 
         if (dom.childNodes.length) {
             meta.childNodes = [];
             dom.childNodes.forEach(function (el, i) {
-                var childData = getFullMetaData(el);
+                var childData = getFullMetaData(el, keepAttrs, inSvg);
                 if (!childData) return true;
                 if (childData.nodeName !== '#text') {
                     var dupProps = [];
@@ -484,36 +526,44 @@
         return className;
     };
 
-    var helperIframe;
     var getHelperIframe = function (iframeSrc) {
         var iframeId = 'qwe123';
+        var helperIframe;
         if (!window.frames[iframeId]) {
             helperIframe = document.createElement('iframe');
             helperIframe.id = iframeId;
             document.body.appendChild(helperIframe);
+        } else {
+            helperIframe = window.frames[iframeId];
         }
         if (iframeSrc) helperIframe.src = iframeSrc;
         return helperIframe;
     };
 
-    var getNodeDefaultCS = function (nodeName) {
+    var getNodeDefaultCS = function (nodeName, inSvg) {
+        inSvg = inSvg || (nodeName === 'svg');
         var iframeIns = getHelperIframe();
         var iframeDoc = iframeIns.contentDocument;
         var iframeNodes = iframeDoc.getElementsByTagName(nodeName);
         var node;
         if (iframeNodes.length) node = iframeNodes[0];
         else {
-            node = iframeDoc.createElement(nodeName);
+            node = (!inSvg) ? iframeDoc.createElement(nodeName) : iframeDoc.createElementNS('http://www.w3.org/2000/svg', nodeName);
             iframeDoc.body.appendChild(node);
         }
         return getComputedStyle(node);
     };
 
-    var buildDom = function (meta) {
+    var buildDom = function (meta, inSvg) {
         if (meta.nodeName === '#text') {
             return document.createTextNode(meta.value);
         }
-        var dom = document.createElement(meta.nodeName);
+        inSvg = inSvg || (meta.nodeName === 'svg');
+        if (inSvg) {
+            var dom = document.createElementNS('http://www.w3.org/2000/svg', meta.nodeName);
+        } else {
+            var dom = document.createElement(meta.nodeName);
+        }
 
         if (meta.attrs) {
             for (var k in meta.attrs) {
@@ -521,11 +571,11 @@
             }
         }
 
-        dom.className = addCssRule(meta.nodeName, meta.style, meta.pseudo);
+        dom.setAttribute('class', addCssRule(meta.nodeName, meta.style, meta.pseudo));
 
         if (meta.childNodes) {
             meta.childNodes.forEach(function (child) {
-                dom.appendChild(buildDom(child));
+                dom.appendChild(buildDom(child, inSvg));
             });
         }
 
@@ -590,9 +640,9 @@
         document.head.appendChild(styleSheet);
         
         ndom = buildDom(rootMeta);
-        var moduleClassNameAlready = ndom.className;
+        var moduleClassNameAlready = ndom.getAttribute('class');
         var moduleClassAlone = !ndom.getElementsByClassName('moduleClassNameAlready').length;
-        ndom.className = moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready);
+        ndom.setAttribute('class', moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready));
         var styleString = '';
         for (var sel in styleSheetData) {
             if (sel === '.' + moduleClassNameAlready || sel.startsWith('.' + moduleClassNameAlready + ':')) {
