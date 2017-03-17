@@ -349,6 +349,11 @@
     };
 
     var getMetaData = function (dom) {
+        /* those properties whose value 'auto' should not be ignored */
+        var autoValueKept = {
+            'margin': true
+        };
+        
         var metaShow = getFullMetaData(dom);
         dom.style.display = 'none';
         var metaHide = getFullMetaData(dom);
@@ -358,7 +363,7 @@
                 if (/px/.test(node1.style[p])
                     && p !== 'transform' && p != 'transition') {
                     node1.style[p] = node2.style[p];
-                    if (node1.style[p] === 'auto' || node1.style[p] === undefined) {
+                    if ((node1.style[p] === 'auto' && !autoValueKept[p]) || node1.style[p] === undefined) {
                         delete node1.style[p];
                     }
                 }
