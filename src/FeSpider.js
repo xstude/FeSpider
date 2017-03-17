@@ -136,10 +136,26 @@
         'z-index': {},
         'width': {},
         'height': {},
-        'max-width': {},
-        'min-width': {},
-        'max-height': {},
-        'min-height': {},
+        'max-width': {
+            ignore: function (v) {
+                return v === 'auto' || v === 'none';
+            }
+        },
+        'min-width': {
+            ignore: function (v) {
+                return v === 'auto' || v === 'none';
+            }
+        },
+        'max-height': {
+            ignore: function (v) {
+                return v === 'auto' || v === 'none';
+            }
+        },
+        'min-height': {
+            ignore: function (v) {
+                return v === 'auto' || v === 'none';
+            }
+        },
         'top': {},
         'right': {},
         'bottom': {},
