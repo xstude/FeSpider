@@ -229,11 +229,11 @@
         'font-style': {
             inherit: true
         },
-        */
-        'letter-spacing': {
+        'line-height': {
             inherit: true
         },
-        'line-height': {
+        */
+        'letter-spacing': {
             inherit: true
         },
         'list-style': {
@@ -403,6 +403,12 @@
         }
         
         return re;
+    };
+    
+    var cleanAttributes = function (dom) {
+        while (dom.attributes.length > 0)
+            dom.removeAttribute(dom.attributes[0].name);
+        return dom;
     };
     
     var getFullMetaData = function (dom, keepAttrs, inSvg) {
@@ -676,7 +682,7 @@
         
         var rootMeta = getMetaData(dom);
         document.head.innerHTML = '';
-        document.body.innerHTML = '';
+        cleanAttributes(document.body).innerHTML = '';
         document.head.appendChild(styleSheet);
         
         ndom = buildDom(rootMeta);
@@ -689,13 +695,13 @@
                 || sel.startsWith('.' + moduleClassNameAlready + '>')) {
                 if (moduleClassAlone) {
                     var selector = '.' + moduleName + sel.substr(1 + moduleClassNameAlready.length);
-                    styleString += selector + '{' + styleSheetData[sel] + '}';
+                    if (styleSheetData[sel]) styleString += selector + '{' + styleSheetData[sel] + '}';
                     continue;
                 } else {
-                    styleString += '.' + moduleName + sel + '{' + styleSheetData[sel] + '}';
+                    if (styleSheetData[sel]) styleString += '.' + moduleName + sel + '{' + styleSheetData[sel] + '}';
                 }
             }
-            styleString += '.' + moduleName + ' ' + sel + '{' + styleSheetData[sel] + '}';
+            if (styleSheetData[sel]) styleString += '.' + moduleName + ' ' + sel + '{' + styleSheetData[sel] + '}';
         }
         styleSheet.innerHTML += styleString;
 
