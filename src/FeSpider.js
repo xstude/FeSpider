@@ -9,9 +9,9 @@
 (function () {
 
     var conf = {
-        fetchFont: false,
+        fetchFont: true,
         serverHost: 'http://127.0.0.1:3663',
-        pullContent: false,
+        pullContent: true,
         generateType: 'html' // 'html' | 'vue'
     };
 
@@ -355,8 +355,10 @@
         };
         
         var metaShow = getFullMetaData(dom);
+        var originalDisplay = getComputedStyle(dom)['display'];
         dom.style.display = 'none';
         var metaHide = getFullMetaData(dom);
+        dom.style.display = originalDisplay;
         var patch = function (node1, node2) {
             if (!node1.style) return;
             for (var p in node1.style) {
@@ -498,23 +500,24 @@
     var nodeTypeCount = {};
     var cssRuleValueHash2Name = {};
     var cssRuleName2ValueHash = {};
-    var stringOfStyleObj = function (obj) {
-        var props = [];
+    var stringOfStyleObj = function (obj, indent) {
+        indent = indent ? '\n    ' : '';
+        var re = '';
         for (var p in obj) {
-            props.push(p + ':' + obj[p] + ';');
+            re += indent + p + ':' + obj[p] + ';';
         }
-        return props.join('');
+        return re;
     };
     var addCssRule = function (nodeName, obj, pseudo) {
-        var self = stringOfStyleObj(obj);
-        var selfHash = self.hashCode();
+        var self = obj;
+        var selfHash = stringOfStyleObj(self).hashCode();
         
         var pseudoValues = {};
         var pseudoHashes = {};
         if (pseudo) {
             for (var p in pseudo) {
-                pseudoValues[p] = !pseudo[p] ? undefined : stringOfStyleObj(pseudo[p]);
-                pseudoHashes[p] = pseudoValues[p] ? pseudoValues[p].hashCode() : undefined;
+                pseudoValues[p] = pseudo[p] || undefined;
+                pseudoHashes[p] = pseudoValues[p] ? stringOfStyleObj(pseudoValues[p]).hashCode() : undefined;
             }
         }
 
@@ -580,10 +583,77 @@
         }
         return getComputedStyle(node);
     };
+    
+    var extractCommonCssFromChildren = function (meta, className, styleData) {
+        /* find all-children-share styles */
+        var validChildCount = 0;
+        var childrenCssStat = {};
+        var allChildrenHave = {};
+        meta.childNodes.forEach(function (child) {
+            if (child.nodeName !== '#text') {
+                validChildCount++;
+                if (child.style) {
+                    for (var i in child.style) {
+                        var key = i + ': ' + child.style[i];
+                        childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
+                    }
+                }
+            }
+        });
+        if (validChildCount > 2) {
+            for (var i in childrenCssStat) {
+                if (childrenCssStat[i] < validChildCount) continue;
+                var splitPos = i.indexOf(': ');
+                allChildrenHave[i.substr(0, splitPos)] = i.substr(splitPos + 2);
+            }
+            if (Object.keys(allChildrenHave).length) {
+                meta.childNodes.forEach(function (child) {
+                    if (child.nodeName !== '#text') {
+                        for (var i in allChildrenHave) {
+                            delete child.style[i];
+                        }
+                    }
+                });
+                /* add the common style rule for child nodes */
+                styleData['.' + className + '>*'] = allChildrenHave;
+            }
+        }
+    };
+    
+    var pl_overflowCombine = function (dom, styles) {
+        for (var sel in styles) {
+            var s = styles[sel];
+            if (s['overflow-x'] && (s['overflow-x'] === s['overflow-y'])) {
+                s['overflow'] = s['overflow-x'];
+                delete s['overflow-x'];
+                delete s['overflow-y'];
+            }
+        }
+    };
+    var pl_borderCombile = function (dom, styles) {
+        for (var sel in styles) {
+            var s = styles[sel];
+            if (s['border-top'] && s['border-right'] && s['border-bottom'] && s['border-left']) {
+                var bt = s['border-top'];
+                var br = s['border-right'];
+                var bb = s['border-bottom'];
+                var bl = s['border-left'];
+                if (bt === br && bt === bb && bt === bl) {
+                    s['border'] = bt;
+                    delete s['border-top'];
+                    delete s['border-right'];
+                    delete s['border-bottom'];
+                    delete s['border-left'];
+                }
+            }
+        }
+    };
+    var plugins = [pl_overflowCombine, pl_borderCombile];
+    var plugin = function (handler) {
+        plugins.push(handler);
+    };
 
     var buildDom = function (meta, inSvg) {
-        var collectCommonCssAmongAllChildren = true;
-        
         if (meta.nodeName === '#text') {
             return document.createTextNode(meta.value);
         }
@@ -604,43 +674,6 @@
         dom.setAttribute('class', className);
 
         if (meta.childNodes) {
-            if (collectCommonCssAmongAllChildren) {
-                /* find all-children-share styles */
-                var validChildCount = 0;
-                var childrenCssStat = {};
-                var allChildrenHave = {};
-                meta.childNodes.forEach(function (child) {
-                    if (child.nodeName !== '#text') {
-                        validChildCount++;
-                        if (child.style) {
-                            for (var i in child.style) {
-                                var key = i + ': ' + child.style[i];
-                                childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
-                            }
-                        }
-                    }
-                });
-                if (validChildCount > 2) {
-                    for (var i in childrenCssStat) {
-                        if (childrenCssStat[i] < validChildCount) continue;
-                        var splitPos = i.indexOf(': ');
-                        allChildrenHave[i.substr(0, splitPos)] = i.substr(splitPos + 2);
-                    }
-                    if (Object.keys(allChildrenHave).length) {
-                        meta.childNodes.forEach(function (child) {
-                            if (child.nodeName !== '#text') {
-                                for (var i in allChildrenHave) {
-                                    delete child.style[i];
-                                }
-                            }
-                        });
-                        /* add the common style rule for child nodes */
-                        styleSheetData['.' + className + '>*'] = stringOfStyleObj(allChildrenHave);
-                    }
-                }
-            }
-            
-            /* add child nodes */
             meta.childNodes.forEach(function (child) {
                 dom.appendChild(buildDom(child, inSvg));
             });
@@ -694,7 +727,7 @@
         
         if (conf.fetchFont) {
             promises.push(getFontFaces().then(results => {
-                styleSheet.innerHTML = results.map(result => result.join('')).join('') + styleSheet.innerHTML;
+                styleSheet.innerHTML = results.map(result => result.join('\n')).join('\n') + '\n' + styleSheet.innerHTML;
                 console.log('[SUCCESS] to get all font-face rules.');
             }).catch(() => {
                 console.error('[ERROR] to get all font-face rules.');
@@ -707,24 +740,43 @@
         document.head.appendChild(styleSheet);
         
         ndom = buildDom(rootMeta);
-        var moduleClassNameAlready = ndom.getAttribute('class');
-        var moduleClassAlone = !ndom.getElementsByClassName('moduleClassNameAlready').length;
-        ndom.setAttribute('class', moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready));
-        var styleString = '';
-        for (var sel in styleSheetData) {
-            if (sel === '.' + moduleClassNameAlready || sel.startsWith('.' + moduleClassNameAlready + ':')
-                || sel.startsWith('.' + moduleClassNameAlready + '>')) {
-                if (moduleClassAlone) {
-                    var selector = '.' + moduleName + sel.substr(1 + moduleClassNameAlready.length);
-                    if (styleSheetData[sel]) styleString += selector + '{' + styleSheetData[sel] + '}';
-                    continue;
-                } else {
-                    if (styleSheetData[sel]) styleString += '.' + moduleName + sel + '{' + styleSheetData[sel] + '}';
-                }
+        
+        PLUGINS: {
+            for (let pl of plugins) {
+                pl.call(null, ndom, styleSheetData);
             }
-            if (styleSheetData[sel]) styleString += '.' + moduleName + ' ' + sel + '{' + styleSheetData[sel] + '}';
         }
-        styleSheet.innerHTML += styleString;
+        
+        SET_MODULE_NAME: {
+            var moduleClassNameAlready = ndom.getAttribute('class');
+            var moduleClassAlone = !ndom.getElementsByClassName(moduleClassNameAlready).length;
+            ndom.setAttribute('class', moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready));
+            for (var sel in styleSheetData) {
+                if (!styleSheetData[sel]) {
+                    delete styleSheetData[sel];
+                    continue;
+                }
+                if (sel === '.' + moduleClassNameAlready || sel.startsWith('.' + moduleClassNameAlready + ':')
+                    || sel.startsWith('.' + moduleClassNameAlready + '>')) {
+                    if (moduleClassAlone) {
+                        var selector = '.' + moduleName + sel.substr(1 + moduleClassNameAlready.length);
+                        styleSheetData[selector] = styleSheetData[sel];
+                        delete styleSheetData[sel];
+                        continue;
+                    } else {
+                        styleSheetData['.' + moduleName + sel] = styleSheetData[sel];
+                    }
+                }
+                styleSheetData['.' + moduleName + ' ' + sel] = styleSheetData[sel];
+                delete styleSheetData[sel];
+            }
+        }
+        
+        var styles = [];
+        for (var sel in styleSheetData) {
+            styles.push([sel, styleSheetData[sel]]); 
+        }
+        styleSheet.innerHTML += styles.map(rule => rule[0] + ' {' + stringOfStyleObj(rule[1], true) + '\n}').join('\n');
 
         document.body.appendChild(ndom);
         
@@ -733,7 +785,8 @@
 
     window.fespider = {
         getMetaData: getMetaData,
-        present: presentDom
+        present: presentDom,
+        plugin: plugin
     };
 
 })();

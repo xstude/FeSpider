@@ -23,6 +23,9 @@ var superagent = require('superagent');
 
 var fs = require('fs');
 
+var cssBeautify = require('js-beautify').css;
+var htmlBeautify = require('js-beautify').html;
+
 // CORS middleware
 var allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -47,13 +50,16 @@ app.get('/get/:url', function (req, res) {
 
 var trans = function (data) {
     var re = '', template;
+    var style = cssBeautify(data.style);
+    var html = data.html;
     switch (data.type) {
     case 'html':
-        template = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${data.name}</title><style>${data.style}</style></head><body>${data.html}</body></html>`;
-        re = template;
+        var i = '    ';
+        template = `<!DOCTYPE html>\n<html>\n${i}<head>\n${i}${i}<meta charset="utf-8">\n${i}${i}<title>${data.name}</title>\n${i}${i}<style>\n${style}\n${i}${i}</style>\n${i}</head>\n${i}<body>\n${i}${html}\n</body>\n</html>`;
+        re = htmlBeautify(template);
         break;
     case 'vue':
-        template = `<template>${data.html}</template><style scoped>${data.style}</style>`;
+        template = `<template>${html}</template><style scoped>${style}</style>`;
         re = template;
         break;
     }
