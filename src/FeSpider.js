@@ -60,10 +60,10 @@
     };
     var recoverCssUrls = function (cssText, baseUrl) {
         var replacer = function (s, p1) {
+            p1 = p1.trim();
             var inner = p1;
-            if (p1.charAt(1) === "'" && p1.charAt(p1.length - 2) === "'") inner = p1.substr(2, p1.length - 4);
-            else if (p1.charAt(1) === '"' && p1.charAt(p1.length - 2) === '"') inner = p1.substr(2, p1.length - 4);
-            else inner = p1.substr(1, p1.length - 2);
+            if ((p1.charAt(0) === "'" && p1.charAt(p1.length - 1) === "'")
+                || (p1.charAt(0) === '"' && p1.charAt(p1.length - 1) === '"')) inner = p1.substr(1, p1.length - 2);
             if (inner.startsWith('data:')) return 'url(' + inner + ')';
             return 'url(\'' + recoverUrl(baseUrl, inner) + '\')';
         };
