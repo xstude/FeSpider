@@ -315,6 +315,14 @@
                 re[prop] = cs[cprop];
             }
         }
+        
+        /* hack for pseudo elements */
+        if (pseudo) {
+            if (re.height === 'auto' || re.height === '0px') {
+                delete re.height;
+            }
+        }
+        
         cleanComputedStyle(re);
         return re;
     };
@@ -331,7 +339,13 @@
                 if (cs.content) {
                     re[p] = getFullStyle(dom, p, inSvg);
                 }
-            } else {
+                var domCS = getComputedStyle(dom);
+                for (var i in re[p]) {
+                    if (PropertyTable[i].inherit && domCS[i] === re[p][i]) {
+                        delete re[p][i];
+                    }
+                }
+            } else { // not used so far
                 var ps = getFullStyle(dom, p, inSvg);
                 var stylePatches = {};
                 var diff = false;
@@ -359,7 +373,8 @@
         'input border': true,
         'textarea outline': true,
         'textarea border': true,
-        'button border': true
+        'button border': true,
+        'ul margin': true
     };
 
     var getMetaData = function (dom) {
