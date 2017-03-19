@@ -117,7 +117,7 @@
         }));
     };
 
-    var PropertyTable = {
+    const PropertyTable = {
         'display': {},
         'zoom': {},
         'flex-direction': {},
@@ -337,7 +337,7 @@
         return re;
     };
 
-    var pseudoClassTable = {
+    const pseudoClassTable = {
         'before': { element: 'inline' },
         'after': { element: 'inline' }
     };
@@ -363,7 +363,7 @@
         return re;
     };
 
-    var preventDefaultProps = {
+    const preventDefaultProps = {
         'a color': true,
         'a text-decoration': true,
         'em font': true,
@@ -429,14 +429,14 @@
         return re;
     };
 
-    var reservedAttrs = {
+    const reservedAttrs = {
         'a': ['href', 'target'],
         'img': ['src'],
-        'input': ['placeholder']
+        'input': ['placeholder', 'value', 'type']
     };
     
     // notice: some attributes would be ignored by default, see variable 'ignoreTable' of function 'getAttributes'
-    var ignoredAttrs = {
+    const ignoredAttrs = {
         'svg': [],
         'svg/*': []
     };
@@ -539,9 +539,6 @@
     };
 
     var styleSheetData = {};
-    var nodeTypeCount = {};
-    var cssRuleValueHash2Name = {};
-    var cssRuleName2ValueHash = {};
     var stringOfStyleObj = function (obj, indent) {
         indent = indent ? '\n    ' : '';
         var re = '';
@@ -550,6 +547,12 @@
         }
         return re;
     };
+
+    DATA_FOR_ADDCSSRULE: {
+        var nodeTypeCount = {};
+        var cssRuleValueHash2Name = {};
+        var cssRuleName2ValueHash = {};
+    }
     var addCssRule = function (nodeName, obj, pseudo) {
         var self = obj;
         var selfHash = stringOfStyleObj(self).hashCode();
