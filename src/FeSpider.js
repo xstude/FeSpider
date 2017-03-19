@@ -135,10 +135,10 @@
         'position': {},
         'z-index': {},
         'width': {
-            default: 'auto'
+            default: () => { return 'auto' }
         },
         'height': {
-            default: 'auto'
+            default: () => { return 'auto' }
         },
         'max-width': {
             ignore: function (v) {
@@ -161,22 +161,26 @@
             }
         },
         'top': {
-            default: 'auto'
+            default: () => { return 'auto' }
         },
         'right': {
-            default: 'auto'
+            default: () => { return 'auto' }
         },
         'bottom': {
-            default: 'auto'
+            default: () => { return 'auto' }
         },
         'left': {
-            default: 'auto'
+            default: () => { return 'auto' }
         },
         'background': {},
         // 'background-color': {},
         // 'background-size': {},
         'margin': {
-            default: '0px'
+            default: (type) => {
+                var ignore = ['ul', 'h1', 'h2', 'h3', 'h4'];
+                if (ignore.indexOf(type) >= 0) return false;
+                return '0px';
+            }
         },
         // 'margin-top': {},
         // 'margin-right': {},
@@ -341,7 +345,7 @@
                 }
                 var domCS = getComputedStyle(dom);
                 for (var i in re[p]) {
-                    if (PropertyTable[i].inherit && domCS[i] === re[p][i]) {
+                    if (PropertyTable[i].inherit && domCS[propNameCamelify(i)] === re[p][i]) {
                         delete re[p][i];
                     }
                 }
@@ -389,14 +393,14 @@
                     if (/px/.test(node1.style[p])
                         && p !== 'transform' && p != 'transition') {
                         node1.style[p] = node2.style[p];
-                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && PropertyTable[p].default !== 'auto')) || (!PropertyTable[p].inherit && PropertyTable[p].default === node1.style[p]) || node1.style[p] === undefined) {
+                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) !== 'auto')) || (!PropertyTable[p].inherit && PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) === node1.style[p]) || node1.style[p] === undefined) {
                             delete node1.style[p];
                         }
                     }
                 }
                 for (var p in node2.style) {
                     if (node1.style[p] == null && node2.style[p].indexOf('auto') >= 0 
-                        && PropertyTable[p].default != node2.style[p]) {
+                        && PropertyTable[p].default(node1.nodeName) != node2.style[p]) {
                         node1.style[p] = node2.style[p]; // this could fix the problem of margin auto 0
                     }
                 }
