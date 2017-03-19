@@ -390,10 +390,14 @@
         var patch = function (node1, node2) {
             if (node1.style) {
                 for (var p in node1.style) {
-                    if (/px/.test(node1.style[p])
-                        && p !== 'transform' && p != 'transition') {
+                    if (node1.style[p] === undefined) {
+                        delete node1.style[p];
+                        continue;
+                    }
+                    if (/px/.test(node1.style[p]) && p !== 'transform' && p != 'transition') {
                         node1.style[p] = node2.style[p];
-                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) !== 'auto')) || (!PropertyTable[p].inherit && PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) === node1.style[p]) || node1.style[p] === undefined) {
+                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) !== node1.style[p]))
+                            || (!PropertyTable[p].inherit && (PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) === node1.style[p]))) {
                             delete node1.style[p];
                         }
                     }
