@@ -160,10 +160,18 @@
                 return v === 'auto' || v === 'none';
             }
         },
-        'top': {},
-        'right': {},
-        'bottom': {},
-        'left': {},
+        'top': {
+            default: 'auto'
+        },
+        'right': {
+            default: 'auto'
+        },
+        'bottom': {
+            default: 'auto'
+        },
+        'left': {
+            default: 'auto'
+        },
         'background': {},
         // 'background-color': {},
         // 'background-size': {},
