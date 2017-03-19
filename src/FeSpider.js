@@ -177,7 +177,7 @@
         // 'background-size': {},
         'margin': {
             default: (type) => {
-                var ignore = ['ul', 'h1', 'h2', 'h3', 'h4'];
+                var ignore = ['ul', 'p', 'dd', 'h1', 'h2', 'h3', 'h4'];
                 if (ignore.indexOf(type) >= 0) return false;
                 return '0px';
             }
@@ -321,11 +321,13 @@
         }
         
         /* hack for pseudo elements */
+        /*
         if (pseudo) {
             if (re.height === 'auto' || re.height === '0px') {
                 delete re.height;
             }
         }
+        */
         
         cleanComputedStyle(re);
         return re;
@@ -349,20 +351,8 @@
                         delete re[p][i];
                     }
                 }
-            } else { // not used so far
-                var ps = getFullStyle(dom, p, inSvg);
-                var stylePatches = {};
-                var diff = false;
-                for (var i in domStyle) {
-                    if (domStyle[i] !== ps[i]) {
-                        stylePatches[i] = ps[i];
-                        diff = true;
-                    }
-                }
-                if (diff) {
-                    re[p] = stylePatches;
-                    console.log('[LOG]', stylePatches);
-                }
+            } else {
+                // won't be reached so far
             }
         }
         if (Object.keys(re).length === 0) return null;
@@ -388,6 +378,7 @@
         var metaHide = getFullMetaData(dom);
         dom.style.display = originalDisplay;
         var patch = function (node1, node2) {
+            var nodeName = node1.nodeName;
             if (node1.style) {
                 for (var p in node1.style) {
                     if (node1.style[p] === undefined) {
@@ -395,16 +386,19 @@
                         continue;
                     }
                     if (/px/.test(node1.style[p]) && p !== 'transform' && p != 'transition') {
+                        if (node2.style[p] === undefined) {
+                            delete node1.style[p];
+                            continue;
+                        }
                         node1.style[p] = node2.style[p];
-                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) !== node1.style[p]))
-                            || (!PropertyTable[p].inherit && (PropertyTable[p].default && PropertyTable[p].default(node1.nodeName) === node1.style[p]))) {
+                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && node1.style[p] !== PropertyTable[p].default(nodeName)))
+                            || (!PropertyTable[p].inherit && (PropertyTable[p].default && PropertyTable[p].default(nodeName) === node1.style[p]))) {
                             delete node1.style[p];
                         }
                     }
                 }
                 for (var p in node2.style) {
-                    if (node1.style[p] == null && node2.style[p].indexOf('auto') >= 0 
-                        && PropertyTable[p].default(node1.nodeName) != node2.style[p]) {
+                    if (node1.style[p] == null && node2.style[p].indexOf('auto') >= 0 && (!PropertyTable[p].default || node2.style[p] !== PropertyTable[p].default(nodeName))) {
                         node1.style[p] = node2.style[p]; // this could fix the problem of margin auto 0
                     }
                 }
@@ -412,6 +406,11 @@
             if (node1.childNodes) {
                 for (var i = 0, len = node1.childNodes.length; i < len; i++) {
                     patch(node1.childNodes[i], node2.childNodes[i]);
+                }
+            }
+            if (node1.pseudo) {
+                for (var i in node1.pseudo) {
+                    node1.pseudo[i] = node2.pseudo[i];
                 }
             }
         };
