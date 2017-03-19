@@ -282,8 +282,12 @@
         'white-space': {
             inherit: true
         },
-        'word-break': {},
-        'word-wrap': {},
+        'word-break': {
+            inherit: true
+        },
+        'word-wrap': {
+            inherit: true
+        },
         'content': {},
         'transform': {},
         'transition': {},
