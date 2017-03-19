@@ -134,8 +134,12 @@
         'align-self': {},
         'position': {},
         'z-index': {},
-        'width': {},
-        'height': {},
+        'width': {
+            default: 'auto'
+        },
+        'height': {
+            default: 'auto'
+        },
         'max-width': {
             ignore: function (v) {
                 return v === 'auto' || v === 'none';
@@ -163,7 +167,9 @@
         'background': {},
         // 'background-color': {},
         // 'background-size': {},
-        'margin': {},
+        'margin': {
+            default: '0px'
+        },
         // 'margin-top': {},
         // 'margin-right': {},
         // 'margin-bottom': {},
@@ -349,11 +355,6 @@
     };
 
     var getMetaData = function (dom) {
-        /* those properties whose value 'auto' should not be ignored */
-        var autoValueKept = {
-            'margin': true
-        };
-        
         var metaShow = getFullMetaData(dom);
         var originalDisplay = getComputedStyle(dom)['display'];
         dom.style.display = 'none';
@@ -365,13 +366,14 @@
                     if (/px/.test(node1.style[p])
                         && p !== 'transform' && p != 'transition') {
                         node1.style[p] = node2.style[p];
-                        if ((node1.style[p] === 'auto' && !autoValueKept[p]) || node1.style[p] === undefined) {
+                        if ((node1.style[p] === 'auto' && !(PropertyTable[p].default && PropertyTable[p].default !== 'auto')) || (!PropertyTable[p].inherit && PropertyTable[p].default === node1.style[p]) || node1.style[p] === undefined) {
                             delete node1.style[p];
                         }
                     }
                 }
                 for (var p in node2.style) {
-                    if (node1.style[p] == null && node2.style[p].indexOf('auto') >= 0) {
+                    if (node1.style[p] == null && node2.style[p].indexOf('auto') >= 0 
+                        && PropertyTable[p].default != node2.style[p]) {
                         node1.style[p] = node2.style[p]; // this could fix the problem of margin auto 0
                     }
                 }
