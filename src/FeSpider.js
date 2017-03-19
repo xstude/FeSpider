@@ -296,7 +296,7 @@
         var re = {};
         for (var prop in PropertyTable) {
             var cprop = propNameCamelify(prop);
-            if (cs[cprop] && (preventDefaultProps[dom.nodeName.toLowerCase() + ' ' + prop]
+            if (cs[cprop] && (preventDefaultProps[dom.nodeName.toLowerCase() + ' ' + prop] || PropertyTable[prop].inherit
                 || (cs[cprop] !== ncs[cprop] && (!PropertyTable[prop].ignore || !PropertyTable[prop].ignore(cs[cprop]))))) {
                 re[prop] = cs[cprop];
             }
