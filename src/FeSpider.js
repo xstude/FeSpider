@@ -360,13 +360,19 @@
         var metaHide = getFullMetaData(dom);
         dom.style.display = originalDisplay;
         var patch = function (node1, node2) {
-            if (!node1.style) return;
-            for (var p in node1.style) {
-                if (/px/.test(node1.style[p])
-                    && p !== 'transform' && p != 'transition') {
-                    node1.style[p] = node2.style[p];
-                    if ((node1.style[p] === 'auto' && !autoValueKept[p]) || node1.style[p] === undefined) {
-                        delete node1.style[p];
+            if (node1.style) {
+                for (var p in node1.style) {
+                    if (/px/.test(node1.style[p])
+                        && p !== 'transform' && p != 'transition') {
+                        node1.style[p] = node2.style[p];
+                        if ((node1.style[p] === 'auto' && !autoValueKept[p]) || node1.style[p] === undefined) {
+                            delete node1.style[p];
+                        }
+                    }
+                }
+                for (var p in node2.style) {
+                    if (node1.style[p] == null && node2.style[p].indexOf('auto') >= 0) {
+                        node1.style[p] = node2.style[p]; // this could fix the problem of margin auto 0
                     }
                 }
             }
