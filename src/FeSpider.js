@@ -376,6 +376,7 @@
         'textarea outline': true,
         'textarea border': true,
         'button border': true,
+        'button color': true,
         'ul margin': true
     };
 
@@ -636,31 +637,35 @@
     var pl_extractCommonCssFromChildren = function (dom, styleData, metaData) {
         /* find all-children-share styles */
         var getChildrenCommonStyles = function (childNodes) {
-            var minOfChildCount = 2;
+            var minOfChildClassCount = 2;
             var minOfRepeatTime = 2;
             
             if (!childNodes) return null;
-            var validChildCount = 0;
+            // var validChildCount = 0;
+            var childClassCount = 0;
             var childrenCssStat = {};
             var allChildrenHave = {};
-            childNodes.forEach(function (child) {
-                if (child.nodeName !== '#text') {
-                    validChildCount++;
-                    if (child.style) {
-                        for (var i in child.style) {
-                            var key = i + ': ' + child.style[i];
-                            childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
-                        }
-                    }
+            var checkedClasses = {};
+            for (let child of childNodes) {
+                if (child.nodeName === '#text') continue;
+                // validChildCount++;
+                if (checkedClasses[child.className]) continue;
+                childClassCount++;
+                checkedClasses[child.className] = true;
+                var cs = styleData['.' + child.className];
+                for (var i in cs) {
+                    var key = i + ': ' + cs[i];
+                    childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
                 }
-            });
-            if (validChildCount >= minOfChildCount) {
+            }
+            if (childClassCount >= minOfChildClassCount) {
                 for (var i in childrenCssStat) {
-                    if (childrenCssStat[i] < validChildCount) continue;
+                    if (childrenCssStat[i] < childClassCount) continue;
                     var splitPos = i.indexOf(': ');
                     allChildrenHave[i.substr(0, splitPos)] = i.substr(splitPos + 2);
                 }
             }
+            // console.log(allChildrenHave);
             return Object.keys(allChildrenHave).length >= minOfRepeatTime ? allChildrenHave : null;
         };
         
@@ -755,7 +760,7 @@
     var plugin = function (handler) {
         plugins.push(handler);
     };
-    // plugins.push(pl_extractCommonCssFromChildren);
+    plugins.push(pl_extractCommonCssFromChildren);
 
     var buildDom = function (meta, inSvg) {
         if (meta.nodeName === '#text') {
