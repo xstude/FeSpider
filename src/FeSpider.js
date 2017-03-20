@@ -9,6 +9,10 @@
 (function () {
 
     var conf = {
+        classNameUpperCase: false,
+        classNameModulePrefix: true,
+        moduleName: 'module',
+        recoverUrlInAttr: false,
         fetchFont: true,
         serverHost: 'http://127.0.0.1:3663',
         pullContent: true,
@@ -498,7 +502,7 @@
             meta.attrs = getAttributes(dom, ignoredAttrs[type]);
         } else if (reservedAttrs[type]) {
             meta.attrs = getAttributes(dom, null, reservedAttrs[type], (attrName, attrValue) => {
-                return (attrName === 'href' || attrName === 'src') ? recoverUrl(window.location.href, attrValue) : attrValue;
+                return ((attrName === 'href' || attrName === 'src') && conf.recoverUrlInAttr) ? recoverUrl(window.location.href, attrValue) : attrValue;
             });
         }
         
@@ -584,7 +588,7 @@
         
         if (!nodeTypeCount[nodeName]) nodeTypeCount[nodeName] = 0;
         nodeTypeCount[nodeName]++;
-        var className = nodeName.toUpperCase() + nodeTypeCount[nodeName];
+        var className = (conf.classNameModulePrefix ? (conf.moduleName + '-') : '') + (conf.classNameUpperCase ? nodeName.toUpperCase() : nodeName.toLowerCase()) + nodeTypeCount[nodeName];
         
         if (!cssRuleValueHash2Name[selfHash]) cssRuleValueHash2Name[selfHash] = [];
         cssRuleValueHash2Name[selfHash].push(className);
@@ -629,43 +633,97 @@
         return getComputedStyle(node);
     };
     
-    var extractCommonCssFromChildren = function (meta, className, styleData) {
+    var pl_extractCommonCssFromChildren = function (dom, styleData, metaData) {
         /* find all-children-share styles */
-        var validChildCount = 0;
-        var childrenCssStat = {};
-        var allChildrenHave = {};
-        meta.childNodes.forEach(function (child) {
-            if (child.nodeName !== '#text') {
-                validChildCount++;
-                if (child.style) {
-                    for (var i in child.style) {
-                        var key = i + ': ' + child.style[i];
-                        childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
+        var getChildrenCommonStyles = function (childNodes) {
+            var minOfChildCount = 2;
+            var minOfRepeatTime = 2;
+            
+            if (!childNodes) return null;
+            var validChildCount = 0;
+            var childrenCssStat = {};
+            var allChildrenHave = {};
+            childNodes.forEach(function (child) {
+                if (child.nodeName !== '#text') {
+                    validChildCount++;
+                    if (child.style) {
+                        for (var i in child.style) {
+                            var key = i + ': ' + child.style[i];
+                            childrenCssStat[key] = (childrenCssStat[key] || 0) + 1;
+                        }
+                    }
+                }
+            });
+            if (validChildCount >= minOfChildCount) {
+                for (var i in childrenCssStat) {
+                    if (childrenCssStat[i] < validChildCount) continue;
+                    var splitPos = i.indexOf(': ');
+                    allChildrenHave[i.substr(0, splitPos)] = i.substr(splitPos + 2);
+                }
+            }
+            return Object.keys(allChildrenHave).length >= minOfRepeatTime ? allChildrenHave : null;
+        };
+        
+        /* index */
+        var className2Nodes = {};
+        var traverse = function (node, index = {}) {
+            if (node.className) {
+                if (!index[node.className]) index[node.className] = [];
+                index[node.className].push(node);
+            }
+            if (node.childNodes) node.childNodes.forEach(child => { traverse(child, index); });
+        };
+        traverse(metaData, className2Nodes);
+        
+        var handler = function (node) {
+            var className = node.className;
+            if (!className) return;
+            
+            if (!node.followers) {
+                var sameClassNodes = className2Nodes[className];
+                var allChildNodes = sameClassNodes.reduce((prev, next) => { return (!next.childNodes ? prev : prev.concat(next.childNodes)); }, []);
+                var commonStyles = getChildrenCommonStyles(allChildNodes);
+                if (commonStyles) {
+                    var checkedClasses = {};
+                    var allIncluded = true;
+                    for (let child of allChildNodes) {
+                        if (child.nodeName === '#text') continue;
+                        if (checkedClasses[child.className]) continue;
+                        checkedClasses[child.className] = true;
+                        var childSameClassNodes = className2Nodes[child.className];
+                        for (let scn of childSameClassNodes) {
+                            if (allChildNodes.indexOf(scn) < 0) {
+                                allIncluded = false;
+                                break;
+                            }
+                        }
+                        if (!allIncluded) break;
+                    }
+                    if (allIncluded) {
+                        styleData['.' + className + '>*'] = commonStyles;
+                        sameClassNodes.forEach(v => { v.followers = commonStyles; });
+                        
+                        for (var c in checkedClasses) {
+                            for (var i in commonStyles) {
+                                delete styleData['.' + c][i];
+                            }
+                        }
                     }
                 }
             }
-        });
-        if (validChildCount > 2) {
-            for (var i in childrenCssStat) {
-                if (childrenCssStat[i] < validChildCount) continue;
-                var splitPos = i.indexOf(': ');
-                allChildrenHave[i.substr(0, splitPos)] = i.substr(splitPos + 2);
+            
+            if (node.childNodes) {
+                for (let child of node.childNodes) {
+                    if (child.nodeName === '#text') continue;
+                    handler(child);
+                }
             }
-            if (Object.keys(allChildrenHave).length) {
-                meta.childNodes.forEach(function (child) {
-                    if (child.nodeName !== '#text') {
-                        for (var i in allChildrenHave) {
-                            delete child.style[i];
-                        }
-                    }
-                });
-                /* add the common style rule for child nodes */
-                styleData['.' + className + '>*'] = allChildrenHave;
-            }
-        }
+        };
+        
+        handler(metaData);
     };
     
-    var pl_overflowCombine = function (dom, styles) {
+    var pl_overflowCombine = function (dom, styles = {}) {
         for (var sel in styles) {
             var s = styles[sel];
             if (s['overflow-x'] && (s['overflow-x'] === s['overflow-y'])) {
@@ -675,7 +733,7 @@
             }
         }
     };
-    var pl_borderCombile = function (dom, styles) {
+    var pl_borderCombile = function (dom, styles = {}) {
         for (var sel in styles) {
             var s = styles[sel];
             if (s['border-top'] && s['border-right'] && s['border-bottom'] && s['border-left']) {
@@ -697,6 +755,7 @@
     var plugin = function (handler) {
         plugins.push(handler);
     };
+    // plugins.push(pl_extractCommonCssFromChildren);
 
     var buildDom = function (meta, inSvg) {
         if (meta.nodeName === '#text') {
@@ -717,6 +776,8 @@
         
         var className = addCssRule(meta.nodeName, meta.style, meta.pseudo);
         dom.setAttribute('class', className);
+        
+        meta.className = className;
 
         if (meta.childNodes) {
             meta.childNodes.forEach(function (child) {
@@ -727,7 +788,7 @@
         return dom;
     };
 
-    var extendObj = function (dest, src) {
+    var extendObj = function (dest, src = {}) {
         for (var i in src) {
             dest[i] = src[i];
         }
@@ -735,7 +796,9 @@
     };
     var presentDom = function (dom, moduleName, options) {
         extendObj(conf, options);
-        moduleName = moduleName || 'module';
+        if (moduleName) conf.moduleName = moduleName;
+        moduleName = conf.moduleName;
+        
         var styleSheet = document.createElement('style');
         var ndom;
         
@@ -745,7 +808,7 @@
                 type: conf.generateType,
                 style: styleSheet.innerHTML,
                 html: ndom.outerHTML
-            }
+            };
             console.log(outputData);
             var postData = new FormData();
             postData.append('json', JSON.stringify(outputData));
@@ -784,18 +847,19 @@
         cleanAttributes(document.body).innerHTML = '';
         document.head.appendChild(styleSheet);
         
-        ndom = buildDom(rootMeta);
+        ndom = buildDom(rootMeta); // will add a `className` to each valid node in `rootMeta`
         
         PLUGINS: {
             for (let pl of plugins) {
-                pl.call(null, ndom, styleSheetData);
+                pl.call(null, ndom, styleSheetData, rootMeta);
             }
         }
         
         SET_MODULE_NAME: {
             var moduleClassNameAlready = ndom.getAttribute('class');
             var moduleClassAlone = !ndom.getElementsByClassName(moduleClassNameAlready).length;
-            ndom.setAttribute('class', moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready));
+            rootMeta.className = moduleClassAlone ? moduleName : (moduleName + ' ' + moduleClassNameAlready);
+            ndom.setAttribute('class', rootMeta.className);
             for (var sel in styleSheetData) {
                 if (!styleSheetData[sel]) {
                     delete styleSheetData[sel];
@@ -821,7 +885,9 @@
         for (var sel in styleSheetData) {
             styles.push([sel, styleSheetData[sel]]); 
         }
-        styleSheet.innerHTML += styles.map(rule => rule[0] + ' {' + stringOfStyleObj(rule[1], true) + '\n}').join('\n');
+        styleSheet.innerHTML += styles
+            .filter(rule => (Object.keys(rule[1]).length > 0))
+            .map(rule => rule[0] + ' {' + stringOfStyleObj(rule[1], true) + '\n}').join('\n');
 
         document.body.appendChild(ndom);
         
