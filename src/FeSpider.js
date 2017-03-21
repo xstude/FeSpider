@@ -145,10 +145,10 @@
         'position': {},
         'z-index': {},
         'width': {
-            default: () => { return 'auto' }
+            default: () => 'auto'
         },
         'height': {
-            default: () => { return 'auto' }
+            default: () => 'auto'
         },
         'max-width': {
             ignore: function (v) {
@@ -171,16 +171,16 @@
             }
         },
         'top': {
-            default: () => { return 'auto' }
+            default: () => 'auto'
         },
         'right': {
-            default: () => { return 'auto' }
+            default: () => 'auto'
         },
         'bottom': {
-            default: () => { return 'auto' }
+            default: () => 'auto'
         },
         'left': {
-            default: () => { return 'auto' }
+            default: () => 'auto'
         },
         'background': {},
         // 'background-color': {},
@@ -249,7 +249,9 @@
         'text-indent': {
             inherit: true
         },
-        'text-overflow': {},
+        'text-overflow': {
+            default: () => 'clip'
+        },
         'overflow-x': {},
         'overflow-y': {},
         'cursor': {
