@@ -23,16 +23,18 @@
      * String Hash
      * Ref: http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
      */
-    String.prototype.hashCode = function () {
-        var hash = 0, i, chr;
-        if (this.length === 0) return hash;
-        for (i = 0; i < this.length; i++) {
-            chr   = this.charCodeAt(i);
-            hash  = ((hash << 5) - hash) + chr;
-            hash |= 0; // Convert to 32bit integer
-        }
-        return hash;
-    };
+    if (!String.prototype.hashCode) {
+        String.prototype.hashCode = function () {
+            var hash = 0, i, chr;
+            if (this.length === 0) return hash;
+            for (i = 0; i < this.length; i++) {
+                chr   = this.charCodeAt(i);
+                hash  = ((hash << 5) - hash) + chr;
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        };
+    }
     
     if (!String.prototype.endsWith) {
         String.prototype.endsWith = function (s) {
@@ -54,7 +56,11 @@
         };
     };
     var recoverUrl = function (base, target) {
-        if (target.startsWith('http://') || target.startsWith('https://') || target.startsWith('data:')) return target;
+        var prefix = target.substr(0, target.indexOf(':'));
+        if (prefix && /[a-z]+/.test(prefix)) {
+            return target;
+        }
+        
         base = recoverUrl(window.location.href, base);
         var b = parseUrl(base);
         if (target.startsWith('//')) return b.protocol + target;
@@ -854,11 +860,7 @@
         
         ndom = buildDom(rootMeta); // will add a `className` to each valid node in `rootMeta`
         
-        PLUGINS: {
-            for (let pl of plugins) {
-                pl.call(null, ndom, styleSheetData, rootMeta);
-            }
-        }
+        PLUGINS: plugins.forEach(pl => pl.call(null, ndom, styleSheetData, rootMeta));
         
         SET_MODULE_NAME: {
             var moduleClassNameAlready = ndom.getAttribute('class');
