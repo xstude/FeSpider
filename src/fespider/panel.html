@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+    <head>
+        <title>fespider</title>
+        <style>
+            #wrap {
+                width: 400px;
+                margin: auto;
+            }
+            #wrap>div {
+                line-height: 32px;
+                margin: 8px 0;
+            }
+            input {
+                display: inline-block;
+                height: 32px;
+                margin: 0;
+                box-sizing: border-box;
+                vertical-align: bottom;
+            }
+            input[type="button"] {
+                width: 100%;
+            }
+            .clearfix:after {
+                content: ".";
+                display: block;
+                height: 0;
+                visibility: hidden;
+                clear: both;
+            }
+            label {
+                width: 200px;
+                margin-right: 20px;
+                text-align: right;
+            }
+            .left {
+                float: left;
+            }
+            .right {
+                float: left;
+            }
+            .center {
+                text-align: center;
+            }
+        </style>
+        <script src="panel.js"></script>
+    </head>
+    <body>
+        <div id="wrap">
+            <div class="clearfix">
+                <label class="left" for="classNameUpperCase" title="classNameUpperCase">classNameUpperCase</label>
+                <input class="right" type="checkbox" id="classNameUpperCase" />
+            </div>
+            <div class="clearfix">
+                <label class="left" for="classNameModulePrefix" title="classNameModulePrefix">classNameModulePrefix</label>
+                <input class="right" type="checkbox" checked id="classNameModulePrefix" />
+            </div>
+            <div class="clearfix">
+                <label class="left" for="moduleName" title="moduleName">moduleName</label>
+                <input class="right" type="text" value="module" id="moduleName" />
+            </div>
+            <div class="clearfix">
+                <label class="left" for="recoverUrlInAttr" title="recoverUrlInAttr">recoverUrlInAttr</label>
+                <input class="right" type="checkbox" id="recoverUrlInAttr" />
+            </div>
+            <div class="clearfix">
+                <label class="left" for="fetchFont" title="fetchFont">fetchFont</label>
+                <input class="right" type="checkbox" checked id="fetchFont" />
+            </div>
+            <div class="clearfix">
+                <label class="left" for="serverHost" title="serverHost">serverHost</label>
+                <input class="right" type="text" value="http://127.0.0.1:3663" id="serverHost" />
+            </div>
+            <div class="clearfix">
+                <label class="left" for="pullContent" title="pullContent">pullContent</label>
+                <input class="right" type="checkbox" checked id="pullContent" />
+            </div>
+            <div class="clearfix">
+                <label class="left" title="generateType">generateType</label>
+                <span class="right">
+                    <label for="generateType1"><input id="generateType1" name="generateType" type="radio" checked value="html" />html</label>
+                    <label for="generateType2"><input id="generateType2" name="generateType" type="radio" value="vue" />vue</label>
+                </span>
+            </div>
+            <div class="center"><input id="present" type="button" value="present" /></div>
+        </div>
+    </body>
+</html>

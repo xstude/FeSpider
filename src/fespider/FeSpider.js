@@ -7,6 +7,8 @@
  */
 
 (function () {
+    
+    if (window.fespider) return;
 
     var conf = {
         classNameUpperCase: false,
@@ -473,7 +475,7 @@
         if (allowAttrNames) {
             for (let an of allowAttrNames) {
                 var av = dom.getAttribute(an);
-                if (av) {
+                if (av || av === '') {
                     re[an] = filter ? filter(an, av) : av;
                 }
             }
@@ -819,6 +821,9 @@
         return dest;
     };
     var presentDom = function (dom, moduleName, options) {
+        
+        initData();
+        
         extendObj(conf, options);
         if (moduleName) conf.moduleName = moduleName;
         moduleName = conf.moduleName;
@@ -917,6 +922,13 @@
         }
         
         Promise.all(promises).then(() => output());
+    };
+    
+    var initData = function () {
+        styleSheetData = {};
+        nodeTypeCount = {};
+        cssRuleValueHash2Name = {};
+        cssRuleName2ValueHash = {};
     };
 
     window.fespider = {
