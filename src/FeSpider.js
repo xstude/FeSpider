@@ -126,6 +126,15 @@
             });
         }));
     };
+    
+    const ignoreNodeName = {
+        '#text': true,
+        '#comment': true,
+        'meta': true,
+        'script': true,
+        'style': true,
+        'iframe': true
+    };
 
     const PropertyTable = {
         'display': {},
@@ -187,7 +196,7 @@
         // 'background-size': {},
         'margin': {
             default: (type) => {
-                var ignore = ['ul', 'p', 'dd', 'h1', 'h2', 'h3', 'h4'];
+                var ignore = ['ul', 'p', 'dd', 'h1', 'h2', 'h3', 'h4', 'body'];
                 if (ignore.indexOf(type) >= 0) return false;
                 return '0px';
             }
@@ -491,15 +500,16 @@
     
     var getFullMetaData = function (dom, keepAttrs, inSvg) {
         var type = dom.nodeName.toLowerCase();
-        inSvg = inSvg || (type === 'svg');
-        if (type === 'meta') return null;
-        if (type === '#comment') return null;
         if (type === '#text') {
             return {
                 nodeName: '#text',
                 value: dom.nodeValue
             };
         }
+        if (ignoreNodeName[type]) return null;
+        
+        inSvg = inSvg || (type === 'svg');
+        
         var meta = {
             nodeName: type,
             style: getFullStyle(dom, null, inSvg)
@@ -820,7 +830,7 @@
                 name: moduleName,
                 type: conf.generateType,
                 style: styleSheet.innerHTML,
-                html: ndom.outerHTML
+                html: (ndom.nodeName === 'body') ? ndom.innerHTML : ndom.outerHTML
             };
             console.log(outputData);
             var postData = new FormData();
@@ -858,6 +868,7 @@
         var rootMeta = getMetaData(dom);
         document.head.innerHTML = '';
         cleanAttributes(document.body).innerHTML = '';
+        if (rootMeta.nodeName !== 'body') document.body.style.margin = '0';
         document.head.appendChild(styleSheet);
         
         ndom = buildDom(rootMeta); // will add a `className` to each valid node in `rootMeta`
@@ -898,7 +909,11 @@
             .filter(rule => (Object.keys(rule[1]).length > 0))
             .map(rule => rule[0] + ' {' + stringOfStyleObj(rule[1], true) + '\n}').join('\n');
 
-        document.body.appendChild(ndom);
+        if (rootMeta.nodeName !== 'body') document.body.appendChild(ndom);
+        else {
+            document.body.setAttribute('class', ndom.getAttribute('class'));
+            document.body.innerHTML = ndom.innerHTML;
+        }
         
         Promise.all(promises).then(() => output());
     };

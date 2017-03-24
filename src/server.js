@@ -38,6 +38,7 @@ var allowCrossDomain = function (req, res, next) {
 app.use(allowCrossDomain);
 
 app.use(express.static(__dirname));
+app.use(express.static(__dirname + '/resources'));
 
 app.get('/get/:url', function (req, res) {
     var url = decodeURIComponent(req.params.url);
@@ -55,7 +56,7 @@ var trans = function (data) {
     switch (data.type) {
     case 'html':
         var i = '    ';
-        template = `<!DOCTYPE html>\n<html>\n${i}<head>\n${i}${i}<meta charset="utf-8">\n${i}${i}<title>${data.name}</title>\n${i}${i}<style>\n${style}\n${i}${i}</style>\n${i}</head>\n${i}<body>\n${i}${html}\n</body>\n</html>`;
+        template = `<!DOCTYPE html>\n<html>\n${i}<head>\n${i}${i}<meta charset="utf-8">\n${i}${i}<title>${data.name}</title>\n${i}${i}<style>\n${style}\n${i}${i}</style>\n${i}</head>\n${i}<body style="margin:0">\n${i}${html}\n</body>\n</html>`;
         re = htmlBeautify(template);
         break;
     case 'vue':
