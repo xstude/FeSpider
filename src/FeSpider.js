@@ -390,6 +390,7 @@
         'em font': true,
         'input outline': true,
         'input border': true,
+        'input box-sizing': true,
         'textarea outline': true,
         'textarea border': true,
         'button border': true,
