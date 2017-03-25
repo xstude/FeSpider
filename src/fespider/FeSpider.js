@@ -395,7 +395,15 @@
         'input box-sizing': true,
         'textarea outline': true,
         'textarea border': true,
+        'textarea border-top': true,
+        'textarea border-right': true,
+        'textarea border-bottom': true,
+        'textarea border-left': true,
         'button border': true,
+        'button border-top': true,
+        'button border-right': true,
+        'button border-bottom': true,
+        'button border-left': true,
         'button color': true,
         'ul margin': true
     };
