@@ -577,7 +577,7 @@
         indent = indent ? '\n    ' : '';
         var re = '';
         for (var p in obj) {
-            re += indent + p + ':' + obj[p] + ';';
+            re += indent + p + ('' === indent ? ':' : ': ') + obj[p] + ';';
         }
         return re;
     };
