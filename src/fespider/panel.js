@@ -16,6 +16,7 @@ var getConf = function () {
 };
 
 var present = function () {
+    // Injected script
     chrome.devtools.inspectedWindow.eval('fespider.present($0, null, ' + JSON.stringify(getConf()) + ')', {
         useContentScriptContext: true
     });
@@ -30,12 +31,17 @@ var backgroundPageConnection = chrome.runtime.connect({
     name: 'panel'
 });
 
-backgroundPageConnection.onMessage.addListener(function (message) {
-    // Handle responses from the background page, if any
+// Send a message to the background page
+backgroundPageConnection.postMessage({
+    name: 'init',
+    tabId: chrome.devtools.inspectedWindow.tabId,
+    scriptToInject: 'FeSpider.js' // Content script
 });
 
-// Relay the tab ID to the background page
-chrome.runtime.sendMessage({
-    tabId: chrome.devtools.inspectedWindow.tabId,
-    scriptToInject: 'FeSpider.js'
+backgroundPageConnection.onMessage.addListener(function (message) {
+    // Incoming message from the background page
+    $('styleOutput').value = message.style;
+    $('htmlOutput').value = message.html;
+    
+    return true;
 });

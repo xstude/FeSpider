@@ -42,6 +42,16 @@
             .center {
                 text-align: center;
             }
+            #output {
+                display: flex;
+                height: 200px;
+            }
+            #output>.flex {
+                flex: 1;
+            }
+            #styleOutput {
+                white-space: nowrap;
+            }
         </style>
         <script src="panel.js"></script>
     </head>
@@ -64,16 +74,16 @@
                 <input class="right" type="checkbox" id="recoverUrlInAttr" />
             </div>
             <div class="clearfix">
-                <label class="left" for="fetchFont" title="fetchFont">fetchFont</label>
-                <input class="right" type="checkbox" checked id="fetchFont" />
-            </div>
-            <div class="clearfix">
                 <label class="left" for="serverHost" title="serverHost">serverHost</label>
                 <input class="right" type="text" value="http://127.0.0.1:3663" id="serverHost" />
             </div>
             <div class="clearfix">
+                <label class="left" for="fetchFont" title="fetchFont">fetchFont</label>
+                <input class="right" type="checkbox" id="fetchFont" />
+            </div>
+            <div class="clearfix">
                 <label class="left" for="pullContent" title="pullContent">pullContent</label>
-                <input class="right" type="checkbox" checked id="pullContent" />
+                <input class="right" type="checkbox" id="pullContent" />
             </div>
             <div class="clearfix">
                 <label class="left" title="generateType">generateType</label>
@@ -83,6 +93,10 @@
                 </span>
             </div>
             <div class="center"><input id="present" type="button" value="present" /></div>
+            <div id="output">
+                <textarea id="styleOutput" class="flex"></textarea>
+                <textarea id="htmlOutput" class="flex"></textarea>
+            </div>
         </div>
     </body>
 </html>

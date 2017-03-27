@@ -847,6 +847,15 @@
                 html: (ndom.nodeName === 'body') ? ndom.innerHTML : ndom.outerHTML
             };
             console.log(outputData);
+            
+            if (typeof chrome !== 'undefined') {
+                chrome.runtime.sendMessage(
+                    JSON.parse(JSON.stringify(outputData)),
+                    function (response) {
+                        console.log(response);
+                    });
+            }
+            
             var postData = new FormData();
             postData.append('json', JSON.stringify(outputData));
             if (conf.pullContent) {

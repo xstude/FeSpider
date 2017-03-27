@@ -1,4 +1,4 @@
-chrome.devtools.panels.elements.createSidebarPane('fespider',
+chrome.devtools.panels.elements.createSidebarPane('FeSpider',
     function (sidebar) {
         sidebar.setPage('panel.html');
 });
