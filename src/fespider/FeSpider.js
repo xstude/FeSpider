@@ -423,6 +423,8 @@
         dom.style.display = 'none';
         var metaHide = getFullMetaData(dom);
         dom.style.display = originalDisplay;
+
+        var propsKeptInNode1 = ['transform', 'transition'];
         var patch = function (node1, node2) {
             var nodeName = node1.nodeName;
             if (node1.style) {
@@ -431,7 +433,7 @@
                         delete node1.style[p];
                         continue;
                     }
-                    if (/px/.test(node1.style[p]) && p !== 'transform' && p != 'transition') {
+                    if (/px/.test(node1.style[p]) && propsKeptInNode1.indexOf(p) < 0) {
                         if (node2.style[p] === undefined) {
                             delete node1.style[p];
                             continue;
@@ -456,7 +458,11 @@
             }
             if (node1.pseudo) {
                 for (var i in node1.pseudo) {
-                    node1.pseudo[i] = node2.pseudo[i];
+                    var keptProps = {};
+                    for (let keptProp of propsKeptInNode1) {
+                        if (node1.pseudo[i][keptProp]) keptProps[keptProp] = node1.pseudo[i][keptProp];
+                    }
+                    node1.pseudo[i] = extendObj(node2.pseudo[i], keptProps);
                 }
             }
         };
