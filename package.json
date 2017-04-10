@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/shenfe/FeSpider"
+    "url": "http://github.com/focus-fe/FeSpider"
   },
   "keywords": [
     "frontend",
@@ -18,9 +18,9 @@
   "author": "keshen",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shenfe/FeSpider/issues"
+    "url": "https://github.com/focus-fe/FeSpider/issues"
   },
-  "homepage": "https://github.com/shenfe/FeSpider",
+  "homepage": "https://github.com/focus-fe/FeSpider",
   "dependencies": {
     "body-parser": "^1.15.2",
     "connect-multiparty": "^2.0.0",
