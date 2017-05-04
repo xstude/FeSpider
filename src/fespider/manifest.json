@@ -17,11 +17,11 @@
         }
     ],
     "icons": {
-        "16": "icon16.png",
-        "48": "icon48.png",
-        "128": "icon128.png",
-        "19": "icon19.png",
-        "38": "icon38.png"
+        "16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png",
+        "19": "images/icon19.png",
+        "38": "images/icon38.png"
     },
     "content_security_policy": "default-src 'self' chrome-extension-resource: ; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; connect-src *; frame-src *;",
     "manifest_version": 2
