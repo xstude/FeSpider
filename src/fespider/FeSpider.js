@@ -16,7 +16,7 @@
         moduleName: 'module',
         recoverUrlInAttr: false,
         fetchFont: true,
-        serverHost: 'http://127.0.0.1:3663',
+        serverHost: 'https://127.0.0.1:3663',
         pullContent: true,
         generateType: 'html' // 'html' | 'vue'
     };
@@ -414,7 +414,9 @@
         'button border-bottom': true,
         'button border-left': true,
         'button color': true,
-        'ul margin': true
+        'ul margin': true,
+        'h1 font': true,
+        'h2 font': true
     };
 
     var getMetaData = function (dom) {
@@ -480,7 +482,8 @@
     const reservedAttrs = {
         'a': ['href', 'target'],
         'img': ['src'],
-        'input': ['placeholder', 'value', 'type']
+        'input': ['placeholder', 'value', 'type'],
+        'textarea': ['placeholder', 'value']
     };
     
     // notice: some attributes would be ignored by default, see variable 'ignoreTable' of function 'getAttributes'

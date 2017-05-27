@@ -1,4 +1,5 @@
 *node_modules*
 src/resources
-src/fespider.pem
+*.pem
 src/fespider.zip
+*sslcert*

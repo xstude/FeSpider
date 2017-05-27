@@ -6,12 +6,24 @@
  * @Last modified time: 2017-03-10 09:43:57
  */
 
+var fs = require('fs');
+
 var conf = {
     pullDir: 'resources' // the dir name
 };
 
 var express = require('express');
 var app = express();
+
+var https = require('https');
+var privateKey  = fs.readFileSync('sslcert/private.pem', 'utf8');
+var certificate = fs.readFileSync('sslcert/file.crt', 'utf8');
+var credentials = {key: privateKey, cert: certificate};
+
+var httpsServer = https.createServer(credentials, app);
+httpsServer.listen(3663, function () {
+    console.log('Listening on port %d', httpsServer.address().port);
+});
 
 var bodyParser = require('body-parser');
 var multipart = require('connect-multiparty');
@@ -20,8 +32,6 @@ var multipartMiddleware = multipart();
 app.use(bodyParser.urlencoded({extended: true})); // support encoded bodies
 
 var superagent = require('superagent');
-
-var fs = require('fs');
 
 var cssBeautify = require('js-beautify').css;
 var htmlBeautify = require('js-beautify').html;
@@ -99,8 +109,4 @@ app.post('/post', multipartMiddleware, function (req, res) {
         code: 200,
         msg: 'success'
     });
-});
-
-var server = app.listen(3663, function () {
-    console.log('Listening on port %d', server.address().port);
 });
