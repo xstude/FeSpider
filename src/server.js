@@ -70,7 +70,8 @@ var trans = function (data) {
         re = htmlBeautify(template);
         break;
     case 'vue':
-        template = `<template>${html}</template><style scoped>${style}</style>`;
+        html = htmlBeautify(html);
+        template = `<template>\n${html}\n</template>\n\n<style scoped>\n${style}\n</style>`;
         re = template;
         break;
     }
