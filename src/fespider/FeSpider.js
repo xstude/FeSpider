@@ -270,6 +270,7 @@
         },
         'float': {},
         'clear': {},
+        'table-layout': {},
         'font': {
             inherit: true
         },
@@ -489,7 +490,9 @@
     // notice: some attributes would be ignored by default, see variable 'ignoreTable' of function 'getAttributes'
     const ignoredAttrs = {
         'svg': [],
-        'svg/*': []
+        'svg/*': [],
+        'table': [],
+        'table/*': []
     };
     
     var getAttributes = function (dom, ignoreAttrNames, allowAttrNames, filter) {
